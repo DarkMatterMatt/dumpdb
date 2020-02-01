@@ -1,4 +1,4 @@
-/*
+/**
  * Source: https://gist.github.com/regeda/969a067ff4ed6ffa8ed6
  */
 
@@ -72,7 +72,7 @@ func (*camelcaseToUnderscoreReplacer) Replace(s string) string {
 	return CamelcaseToUnderscore(s)
 }
 
-// NewcamelcaseToUnderscoreReplacer creates a string replacer.
+// NewCamelcaseToUnderscoreReplacer creates a string replacer.
 func NewCamelcaseToUnderscoreReplacer() *camelcaseToUnderscoreReplacer {
 	return &camelcaseToUnderscoreReplacer{}
 }
