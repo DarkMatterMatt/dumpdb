@@ -1,0 +1,7 @@
+# Enforce Unix newlines
+*.gitattributes text eol=lf
+*.gitignore     text eol=lf
+*.go            text eol=lf
+*.json          text eol=lf
+*.md            text eol=lf
+*.sql           text eol=lf
