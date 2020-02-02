@@ -2,7 +2,7 @@
  * Source: https://gist.github.com/regeda/969a067ff4ed6ffa8ed6
  */
 
-package pkg
+package camelcase2underscore
 
 import (
 	"unicode"
@@ -29,8 +29,8 @@ func (b *buffer) indent() {
 	}
 }
 
-// CamelcaseToUnderscore converts a camelcase style string to an underscore style string.
-func CamelcaseToUnderscore(s string) string {
+// Camelcase2Underscore converts a camelcase style string to an underscore style string.
+func Camelcase2Underscore(s string) string {
 	b := buffer{
 		r: make([]byte, 0, len(s)),
 	}
@@ -65,15 +65,15 @@ func CamelcaseToUnderscore(s string) string {
 	return string(b.r)
 }
 
-// CamelcaseToUnderscoreReplacer is similar to a string.replacer
-type CamelcaseToUnderscoreReplacer struct{}
+// Camelcase2UnderscoreReplacer is similar to a string.replacer
+type Camelcase2UnderscoreReplacer struct{}
 
 // Replace returns a copy of s with all replacements performed.
-func (*CamelcaseToUnderscoreReplacer) Replace(s string) string {
-	return CamelcaseToUnderscore(s)
+func (*Camelcase2UnderscoreReplacer) Replace(s string) string {
+	return Camelcase2Underscore(s)
 }
 
-// NewCamelcaseToUnderscoreReplacer creates a string replacer.
-func NewCamelcaseToUnderscoreReplacer() *CamelcaseToUnderscoreReplacer {
-	return &CamelcaseToUnderscoreReplacer{}
+// NewCamelcase2UnderscoreReplacer creates a string replacer.
+func NewCamelcase2UnderscoreReplacer() *Camelcase2UnderscoreReplacer {
+	return &Camelcase2UnderscoreReplacer{}
 }

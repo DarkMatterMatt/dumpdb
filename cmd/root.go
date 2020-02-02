@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/darkmattermatt/dumpdb/pkg"
+	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-var v *viper.Viper = viper.NewWithOptions(viper.EnvKeyReplacer(pkg.NewCamelcaseToUnderscoreReplacer()))
+var v = viper.NewWithOptions(viper.EnvKeyReplacer(camelcase2underscore.NewCamelcase2UnderscoreReplacer()))
 
 // the base command when called without any subcommands
 var rootCmd = &cobra.Command{
