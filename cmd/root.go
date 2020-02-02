@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/darkmattermatt/dumpdb/pkg"
 	"github.com/spf13/cobra"
 
-	"github.com/darkmattermatt/dumpdb/pkg"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-var v *viper.Viper
+var v *viper.Viper = viper.NewWithOptions(viper.EnvKeyReplacer(pkg.NewCamelcaseToUnderscoreReplacer()))
 
 // the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -36,19 +35,18 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.DumpDB.yaml)")
+	rootCmd.PersistentFlags().StringP("config", "c", "", "config file (default is $HOME/.dumpdb.yaml)")
 }
 
 // initConfig reads in config file and ENV variables if set
 func initConfig() {
 	// read in environment variables that match
-	v = viper.NewWithOptions(viper.EnvKeyReplacer(pkg.NewCamelcaseToUnderscoreReplacer()))
 	v.SetEnvPrefix("ddb")
 	v.AutomaticEnv()
 
-	if cfgFile != "" {
+	if v.GetString("config") != "" {
 		// use config file from the flag
-		v.SetConfigFile(cfgFile)
+		v.SetConfigFile(v.GetString("config"))
 	} else {
 		// find home directory
 		home, err := homedir.Dir()
