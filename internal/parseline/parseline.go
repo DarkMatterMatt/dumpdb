@@ -41,6 +41,7 @@ func ParseLine(line, source string, sourceDb *sql.DB, sourceTable string) (Recor
 	result.Email = r[0]
 	// result.EmailRev = reverse(r[0])
 	result.Password = r[1]
-	result.Source = getsourceid.GetSourceID(source, sourceDb, sourceTable)
+	result.Source = source
+	result.SourceID = getsourceid.GetSourceID(source, sourceDb, sourceTable)
 	return result, nil
 }

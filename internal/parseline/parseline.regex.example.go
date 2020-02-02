@@ -42,6 +42,7 @@ func parseLineRegexExample(line, source string, sourceDb *sql.DB, sourceTable st
 			result.Password = match[i]
 		}
 	}
-	result.Source = getsourceid.GetSourceID(source, sourceDb, sourceTable)
+	result.Source = source
+	result.SourceID = getsourceid.GetSourceID(source, sourceDb, sourceTable)
 	return result, nil
 }
