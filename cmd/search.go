@@ -1,7 +1,8 @@
+package cmd
+
 /**
  * Author: Matt Moran
  */
-package cmd
 
 import (
 	"fmt"
