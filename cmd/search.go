@@ -5,8 +5,6 @@ package cmd
  */
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +13,6 @@ var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Search multiple databases simultaneously.",
 	Long:  "",
-	Run:   runSearch,
 }
 
 func init() {
@@ -24,8 +21,4 @@ func init() {
 	// searchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	v.BindPFlags(searchCmd.Flags())
-}
-
-func runSearch(cmd *cobra.Command, args []string) {
-	fmt.Println("search called")
 }
