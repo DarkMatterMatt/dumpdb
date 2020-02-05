@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
 	"github.com/spf13/cobra"
 )
 
@@ -17,14 +18,12 @@ var importCmd = &cobra.Command{
 	Short: "Import a file or folder into a database.",
 	Long:  "",
 	Run:   runImport,
-	Args:  validateArgs,
-}
-
-func validateArgs(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("requires a file or directory to import recursively")
-	}
-	return nil
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New("Missing at least one parameter: file or directory to import recursively")
+		}
+		return pathexists.PathsAllExist(args)
+	},
 }
 
 func init() {
