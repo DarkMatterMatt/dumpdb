@@ -14,8 +14,9 @@ Output levels are as follows:
 
 **Global Parameters:**
 
-- `v=3`: Verbosity. Set this flag multiple times for more verbosity.
-- `q=0`: Quiet. This is subtracted from the verbosity.
+- `config=''`: Config file
+- `v=3`: Verbosity. Set this flag multiple times for more verbosity
+- `q=0`: Quiet. This is subtracted from the verbosity
 
 ## Process
 
@@ -32,22 +33,22 @@ Process files or folders into a regularised tab-delimited text file.
 
 ## Import
 
-Imports files or folders into a database.
+Import files or folders into a database.
 
 **Parameters:**
 
 - `filesOrFolders+`: One or more positional arguments of files and/or folders to import
-- `conn=`: SQL connection string for the database. Like `user:pass@tcp(127.0.0.1:3306)/collection1`
+- `conn=`: Connection string for the SQL database. Like `user:pass@tcp(127.0.0.1:3306)/collection1`
 - `table=`: Database table name to insert into
-- `sourcesConn=`: SQL connection string for the sources database. Like `user:pass@tcp(127.0.0.1:3306)/sources`
+- `sourcesConn=`: Connection string for the sources database. Like `user:pass@tcp(127.0.0.1:3306)/sources`
 - `sourcesTable="sources"`: Database table name to store sources in
-- `engine="Aria"`: The database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL.
-- `compress`: Pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine.
-- `tmpFileLines=4e6`: Number of lines per output file. 1e6 = ~32MB, 32e6 = ~1GB
-- `tmpFilePrefix="output_"`: Temporary processed file prefix
+- `engine="Aria"`: The database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL
+- `compress`: Pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine
+- `tmpFileLines=4e6`: Number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB
+- `tmpFilePrefix="[dbName]_"`: Temporary processed file prefix
 - `tmpFileSuffix=".txt"`: Temporary processed file suffix
-- `doneLog="[dbName]_done.log"`: Log file for processed input files
 - `errLog="[dbName]_err.log"`: Log file for unparsed lines
+- `doneLog="[dbName]_done.log"`: Log file for processed input files
 - `skipLog="[dbName]_skip.log"`: Log file for skipped input files
 
 ## Search
@@ -56,9 +57,10 @@ Search multiple dump databases simultaneously.
 
 **Parameters:**
 
-- `query="1=1 LIMIT 10"`: The WHERE clause of a SQL query. Yes it's injected, so try not to break your own database
-- `connPrefix=`: Connection string prefix to connect to MySQL. Like user:pass@tcp(127.0.0.1:3306)
-- `dbNames=`: Comma separated list of databases to search
+- `query=""`: The WHERE clause of a SQL query. Yes it's injected, so try not to break your own database
 - `columns="all"`: Comma separated list of columns to retrieve from the database
-- `sourcesConn=""`: SQL connection string for the sources database. Like `user:pass@tcp(127.0.0.1:3306)/sources`
+- `connPrefix=`: Connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)
+- `db=`: Comma separated list of databases to search
+- `dbTable="main"`: Database table name to search. Must be the same for all databases
+- `sourcesConn=""`: Connection string for the sources database. Like `user:pass@tcp(127.0.0.1:3306)/sources`
 - `sourcesTable="sources"`: Database table name to resolve integer sourceIDs to the source's name
