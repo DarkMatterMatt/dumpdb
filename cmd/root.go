@@ -36,7 +36,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringP("config", "c", "", "config file (default is $HOME/.dumpdb.yaml)")
+	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.dumpdb.yaml)")
+	rootCmd.PersistentFlags().CountP("verbose", "v", "verbosity. Set this flag multiple times for more verbosity")
+	rootCmd.PersistentFlags().CountP("quiet", "q", "quiet. This is subtracted from the verbosity")
 }
 
 // initConfig reads in config file and ENV variables if set
