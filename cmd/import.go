@@ -15,7 +15,7 @@ import (
 // the `import` command
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Import a file or folder into a database.",
+	Short: "Import files or folders into a database.",
 	Long:  "",
 	Run:   runImport,
 	Args: func(cmd *cobra.Command, args []string) error {
@@ -29,18 +29,25 @@ var importCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(importCmd)
 
-	importCmd.Flags().StringP("connection", "C", "", "SQL connection string to enable automatic loading into MariaDB. Like user:pass@tcp(127.0.0.1:3306)/collection1")
-	importCmd.Flags().Int("outputFileLines", 4e6, "(Temp) output file suffix")
-	importCmd.Flags().String("doneLog", "[dbName]_done.log", "Output log file")
-	importCmd.Flags().String("skipLog", "[dbName]_skip.log", "Skipped log file")
-	importCmd.Flags().String("errLog", "[dbName]_err.log", "Error log file")
-	importCmd.Flags().String("outFilePrefix", "[dbName]_", "(Temp) output file prefix")
-	importCmd.Flags().String("outFileSuffix", ".txt", "(Temp) output file suffix")
-	importCmd.Flags().String("tableName", "main", "Database table name to insert into")
-	importCmd.Flags().String("sourcesConnection", "", "Optional SQL connection string to enable automatic loading into MariaDB. Like user:pass@tcp(127.0.0.1:3306)/sources")
-	importCmd.Flags().String("sourcesTableName", "sources", "Database table name to store sources in")
+	// Positional args: filesOrFolders: files and/or folders to import
+	importCmd.Flags().StringP("conn", "c", "", "connection string for the SQL database. Like user:pass@tcp(127.0.0.1:3306)/collection1")
+	importCmd.Flags().StringP("table", "t", "main", "database table name to insert into")
+	importCmd.Flags().StringP("sourcesConn", "C", "", "connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
+	importCmd.Flags().StringP("sourcesTable", "T", "sources", "database table name to store sources in")
 
-	importCmd.MarkFlagRequired("connection")
+	importCmd.Flags().String("engine", "Aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
+	importCmd.Flags().Bool("compress", false, "pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine")
+
+	importCmd.Flags().Int("tmpFileLines", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
+	importCmd.Flags().String("tmpFilePrefix", "[dbName]_", "temporary processed file prefix")
+	importCmd.Flags().String("tmpFileSuffix", ".txt", "temporary processed file suffix")
+
+	importCmd.Flags().String("errLog", "[dbName]_err.log", "log file for unparsed lines")
+	importCmd.Flags().String("doneLog", "[dbName]_done.log", "log file for processed input files")
+	importCmd.Flags().String("skipLog", "[dbName]_skip.log", "log file for skipped input files")
+
+	importCmd.MarkFlagRequired("conn")
+	importCmd.MarkFlagRequired("sourcesConn")
 	v.BindPFlags(importCmd.Flags())
 }
 

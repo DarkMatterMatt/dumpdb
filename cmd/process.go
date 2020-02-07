@@ -7,6 +7,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
 	"github.com/spf13/cobra"
@@ -15,7 +16,7 @@ import (
 // the `process` command
 var processCmd = &cobra.Command{
 	Use:   "process",
-	Short: "Process a file or folder into tab-delimited files.",
+	Short: "Process files or folders into a regularised tab-delimited text file.",
 	Long:  "",
 	Run:   runProcess,
 	Args: func(cmd *cobra.Command, args []string) error {
@@ -29,14 +30,18 @@ var processCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(processCmd)
 
-	importCmd.Flags().Int("outputFileLines", 4e6, "Output file suffix")
-	importCmd.Flags().String("doneLog", "[outFilePrefix]done.log", "Output log file")
-	importCmd.Flags().String("skipLog", "[outFilePrefix]skip.log", "Skipped log file")
-	importCmd.Flags().String("errLog", "[outFilePrefix]err.log", "Error log file")
-	importCmd.Flags().String("outFilePrefix", "", "Output file prefix")
-	importCmd.Flags().String("outFileSuffix", ".txt", "Output file suffix")
+	// Positional args: filesOrFolders: files and/or folders to import
+	processCmd.Flags().Int("outputFileLines", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
+	processCmd.Flags().String("outputFilePrefix", "[filesPrefix]_", "temporary processed file prefix")
+	processCmd.Flags().String("outputFileSuffix", ".txt", "temporary processed file suffix")
 
-	v.BindPFlags(importCmd.Flags())
+	processCmd.Flags().String("errLog", "[filesPrefix]_err.log", "log file for unparsed lines")
+	processCmd.Flags().String("doneLog", "[filesPrefix]_done.log", "log file for processed input files")
+	processCmd.Flags().String("skipLog", "[filesPrefix]_skip.log", "log file for skipped input files")
+
+	processCmd.Flags().String("filesPrefix", time.Now().Format("2006-01-02_15-04-05_"), "temporary processed file prefix")
+
+	v.BindPFlags(processCmd.Flags())
 }
 
 func runProcess(cmd *cobra.Command, args []string) {
