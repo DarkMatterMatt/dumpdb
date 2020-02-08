@@ -6,10 +6,10 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
+	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/spf13/cobra"
 )
 
@@ -45,5 +45,5 @@ func init() {
 }
 
 func runProcess(cmd *cobra.Command, args []string) {
-	fmt.Println("process called")
+	l.I("process called")
 }

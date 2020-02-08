@@ -5,10 +5,9 @@ package cmd
  */
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
+
+	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -27,18 +26,23 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	err := rootCmd.Execute()
+	l.FatalOnErr(err)
 }
 
 func init() {
+	// initialize logger
+	l.GetVerbosityWith(func() int {
+		return l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
+	})
+
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.dumpdb.yaml)")
 	rootCmd.PersistentFlags().CountP("verbose", "v", "verbosity. Set this flag multiple times for more verbosity")
 	rootCmd.PersistentFlags().CountP("quiet", "q", "quiet. This is subtracted from the verbosity")
+
+	v.BindPFlags(rootCmd.PersistentFlags())
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -53,10 +57,7 @@ func initConfig() {
 	} else {
 		// find home directory
 		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		l.FatalOnErr(err)
 
 		// search config in home directory with name ".dumpdb" (without extension).
 		v.AddConfigPath(home)
@@ -65,6 +66,6 @@ func initConfig() {
 
 	// if a config file is found, read it in.
 	if err := v.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", v.ConfigFileUsed())
+		l.V("Using config file:", v.ConfigFileUsed())
 	}
 }

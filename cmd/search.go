@@ -5,9 +5,9 @@ package cmd
  */
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+
+	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 )
 
 // the `search` command
@@ -39,5 +39,5 @@ func init() {
 }
 
 func runSearch(cmd *cobra.Command, args []string) {
-	fmt.Println("search called")
+	l.I("search called")
 }

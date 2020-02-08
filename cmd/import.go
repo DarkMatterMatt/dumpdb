@@ -6,9 +6,9 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
+	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/spf13/cobra"
 )
 
@@ -52,5 +52,5 @@ func init() {
 }
 
 func runImport(cmd *cobra.Command, args []string) {
-	fmt.Println("import called")
+	l.I("import called")
 }
