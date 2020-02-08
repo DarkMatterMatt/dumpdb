@@ -6,11 +6,12 @@ DumpDB imports credential dumps into a database to improve search performance.
 
 Output levels are as follows:
 
-1. `ERRORS + RESULTS`: Only show errors and results
-2. `WARNINGS`: Nonfatal errors (usually occurring in one of the query threads)
-3. `INFO`: The default level, provides minimal information at each step of the process
-4. `VERBOSE`: Tells you what's going on
-5. `DEBUG`: Spews out data
+1. `RESULTS`: Only show errors and search results
+1. `FATAL`: Only show errors and search results
+1. `WARNINGS`: Nonfatal errors (usually occurring in one of the query threads)
+1. `INFO`: The default level, provides minimal information at each step of the process
+1. `VERBOSE`: Tells you what's going on
+1. `DEBUG`: Spews out data
 
 **Global Parameters:**
 
