@@ -20,9 +20,9 @@ var importCmd = &cobra.Command{
 	Run:   runImport,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Missing at least one parameter: file or directory to import recursively")
+			return errors.New("Missing files to import")
 		}
-		return pathexists.PathsAllExist(args)
+		return pathexists.AssertPathsAreFiles(args)
 	},
 }
 

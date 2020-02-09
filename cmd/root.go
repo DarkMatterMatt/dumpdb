@@ -5,6 +5,9 @@ package cmd
  */
 
 import (
+	"os"
+	"os/signal"
+
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
@@ -22,6 +25,13 @@ var rootCmd = &cobra.Command{
 	Short: "DumpDB imports credential dumps into a database to improve search performance.",
 	Long:  "",
 }
+
+var (
+	signalInterrupt bool
+	doneFile        *os.File
+	skipFile        *os.File
+	errFile         *os.File
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -43,6 +53,15 @@ func init() {
 	rootCmd.PersistentFlags().CountP("quiet", "q", "quiet. This is subtracted from the verbosity")
 
 	v.BindPFlags(rootCmd.PersistentFlags())
+
+	// listen for CTRL+C
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt)
+	go func() {
+		<-signalChannel
+		signalInterrupt = true
+		l.I("CTRL+C caught, stopping gracefully")
+	}()
 }
 
 // initConfig reads in config file and ENV variables if set
