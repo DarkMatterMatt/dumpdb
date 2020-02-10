@@ -120,11 +120,34 @@ func (s *SplitFileWriter) WriteString(st string) (int, error) {
 }
 
 // preWrite increments the writeCount and opens a new file if required
-func (s *SplitFileWriter) preWrite() (err error) {
-	s.writeCount++
+func (s *SplitFileWriter) preWrite() error {
 	if s.writeCount >= s.maxWrites {
+		err := s.Flush()
+		if err != nil {
+			return err
+		}
+
 		s.currentInc++
-		s, err = OpenFileNewWriterSizeInc(s.namePrefix, s.nameSuffix, s.currentInc, s.maxWrites, s.fileFlag, s.filePerm, s.bufSize)
+		n, err := OpenFileNewWriterSizeInc(s.namePrefix, s.nameSuffix, s.currentInc, s.maxWrites, s.fileFlag, s.filePerm, s.bufSize)
+		if err != nil {
+			return err
+		}
+
+		s.copyToSelf(n)
 	}
-	return err
+	s.writeCount++
+	return nil
+}
+
+func (s *SplitFileWriter) copyToSelf(n *SplitFileWriter) {
+	s.namePrefix = n.namePrefix
+	s.nameSuffix = n.nameSuffix
+	s.maxWrites = n.maxWrites
+	s.fileFlag = n.fileFlag
+	s.filePerm = n.filePerm
+	s.bufSize = n.bufSize
+	s.currentFile = n.currentFile
+	s.currentBuf = n.currentBuf
+	s.writeCount = n.writeCount
+	s.currentInc = n.currentInc
 }
