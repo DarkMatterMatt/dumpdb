@@ -32,6 +32,12 @@ Process files or folders into a regularised tab-delimited text file.
 - `errLog="[dbName]_err.log"`: Log file for unparsed lines
 - `skipLog="[dbName]_skip.log"`: Log file for skipped input files
 
+### File Processing
+
+- `.tar.gz`, `.tgz`: Decompress and open tarball, process each file
+- `.txt`, `.csv`: Create `bufio.Scanner`
+- `bufio.Scanner`: Process each line
+
 ## Import
 
 Import files or folders into a database.
