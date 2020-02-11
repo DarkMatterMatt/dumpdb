@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/darkmattermatt/DumpDB/internal/config"
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
@@ -31,6 +32,7 @@ var (
 	doneFile        *os.File
 	skipFile        *os.File
 	errFile         *os.File
+	c               config.Config
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -43,7 +45,7 @@ func Execute() {
 func init() {
 	// initialize logger
 	l.GetVerbosityWith(func() int {
-		return l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
+		return c.Verbosity
 	})
 
 	cobra.OnInitialize(initConfig)
@@ -87,4 +89,8 @@ func initConfig() {
 	if err := v.ReadInConfig(); err == nil {
 		l.V("Using config file:", v.ConfigFileUsed())
 	}
+
+	// store settings in config map
+	c.ConfigFile = v.GetString("config")
+	c.Verbosity = l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
 }
