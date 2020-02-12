@@ -5,11 +5,18 @@ package cmd
  */
 
 import (
+	"bufio"
 	"errors"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/darkmattermatt/dumpdb/internal/linescanner"
+	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
+	"github.com/darkmattermatt/dumpdb/pkg/reverse"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
+	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +28,9 @@ var processCmd = &cobra.Command{
 	Run:   runProcess,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Missing at least one parameter: file or directory to import recursively")
+			return errors.New("Missing files to process")
 		}
-		return pathexists.PathsAllExist(args)
+		return pathexists.AssertPathsAreFiles(args)
 	},
 }
 
@@ -39,11 +46,86 @@ func init() {
 	processCmd.Flags().String("doneLog", "[filesPrefix]_done.log", "log file for processed input files")
 	processCmd.Flags().String("skipLog", "[filesPrefix]_skip.log", "log file for skipped input files")
 
-	processCmd.Flags().String("filesPrefix", time.Now().Format("2006-01-02_15-04-05_"), "temporary processed file prefix")
+	processCmd.Flags().String("filesPrefix", time.Now().Format("2006-01-02_15-04-05_"), "processed file prefix")
 
 	v.BindPFlags(processCmd.Flags())
 }
 
-func runProcess(cmd *cobra.Command, args []string) {
-	l.I("process called")
+func getLogFileName(x string) string {
+	return strings.ReplaceAll(v.GetString(x), "[filesPrefix]", c.FilesPrefix)
+}
+
+func loadProcessConfig() error {
+	c.OutFileLines = v.GetInt("outputFileLines")
+	c.OutFilePrefix = v.GetString("outputFilePrefix")
+	c.OutFileSuffix = v.GetString("outputFileSuffix")
+	c.ErrLog = v.GetString("errLog")
+	c.DoneLog = v.GetString("doneLog")
+	c.SkipLog = v.GetString("skipLog")
+	c.FilesPrefix = v.GetString("filesPrefix")
+	return nil
+}
+
+func runProcess(cmd *cobra.Command, filesOrFolders []string) {
+	err := loadProcessConfig()
+	l.FatalOnErr(err)
+
+	errFile, err = os.OpenFile(getLogFileName("errLog"), os.O_CREATE|os.O_APPEND, 0)
+	l.FatalOnErr(err)
+	doneFile, err = os.OpenFile(getLogFileName("doneLog"), os.O_CREATE|os.O_APPEND, 0)
+	l.FatalOnErr(err)
+	skipFile, err = os.OpenFile(getLogFileName("skipLog"), os.O_CREATE|os.O_APPEND, 0)
+	l.FatalOnErr(err)
+	outputFile, err = splitfilewriter.OpenFileNewWriter(c.OutFilePrefix, c.OutFileSuffix, c.OutFileLines, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	l.FatalOnErr(err)
+
+	for _, path := range filesOrFolders {
+		linescanner.LineScanner(path, processTextFileScanner)
+	}
+}
+
+func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
+	if !strings.HasSuffix(path, ".txt") && !strings.HasSuffix(path, ".csv") {
+		l.V("Skipping: " + path)
+		_, err := skipFile.WriteString(path + "\n")
+		l.FatalOnErr(err)
+		return nil
+	}
+
+	l.V("Processing: " + path)
+
+	for lineScanner.Scan() {
+		// CTRL+C means stop
+		if signalInterrupt {
+			return errors.New("Signal Interrupt")
+		}
+
+		line := lineScanner.Text()
+		// skip blank lines
+		if line == "" {
+			continue
+		}
+
+		// parse & reformat line
+		r, err := parseline.ParseLine(line, path)
+		if err != nil {
+			errFile.WriteString(line + "\n")
+			continue
+		}
+
+		if r.EmailRev == "" && r.Email != "" {
+			r.EmailRev = reverse.Reverse(r.Email)
+		}
+
+		parsedArray := []string{r.Source, r.Username, r.EmailRev, r.Hash, r.Password}
+		parsedStr := strings.Join(parsedArray, "\t")
+
+		// write string to output file
+		_, err = outputFile.WriteString(parsedStr + "\n")
+		if err != nil {
+			l.FatalOnErr(err)
+		}
+	}
+	doneFile.WriteString(path + "\n")
+	return nil
 }
