@@ -121,6 +121,24 @@ func (s *SplitFileWriter) WriteString(st string) (int, error) {
 	return s.CurrentBuf.WriteString(st)
 }
 
+// PrevFileName returns the path of the last file that was opened for writing.
+func (s *SplitFileWriter) PrevFileName() string {
+	if s.CurrentInc == 0 {
+		return ""
+	}
+	return s.NamePrefix + strconv.Itoa(s.CurrentInc-1) + s.NameSuffix
+}
+
+// CurrentFileName returns the path of the current file open for writing.
+func (s *SplitFileWriter) CurrentFileName() string {
+	return s.NamePrefix + strconv.Itoa(s.CurrentInc) + s.NameSuffix
+}
+
+// NextFileName returns the path of the next file that will be opened for writing.
+func (s *SplitFileWriter) NextFileName() string {
+	return s.NamePrefix + strconv.Itoa(s.CurrentInc+1) + s.NameSuffix
+}
+
 // preWrite increments the writeCount and opens a new file if required
 func (s *SplitFileWriter) preWrite() error {
 	if s.WriteCount >= s.MaxWrites {
