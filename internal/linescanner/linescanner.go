@@ -1,4 +1,4 @@
-package getlinescanner
+package linescanner
 
 import (
 	"archive/tar"
@@ -9,16 +9,16 @@ import (
 	"strings"
 )
 
-// GetLineScanner creates a bufio.Scanner from a file, decompressing the file if necessary.
-func GetLineScanner(path string, callback func(string, *bufio.Scanner) error) error {
+// LineScanner creates a bufio.Scanner from a file, decompressing the file if necessary.
+func LineScanner(path string, callback func(string, *bufio.Scanner) error) error {
 	if strings.HasSuffix(path, ".tar.gz") || strings.HasSuffix(path, ".tgz") {
-		return GetTarGzLineScanner(path, callback)
+		return TarGzLineScanner(path, callback)
 	}
-	return GetTextLineScanner(path, callback)
+	return TextLineScanner(path, callback)
 }
 
-// GetTarGzLineScanner creates a bufio.Scanner from a .tar.gz file.
-func GetTarGzLineScanner(path string, callback func(string, *bufio.Scanner) error) error {
+// TarGzLineScanner creates a bufio.Scanner from a .tar.gz file.
+func TarGzLineScanner(path string, callback func(string, *bufio.Scanner) error) error {
 	// open tar.gz
 	tarGz, err := os.Open(path)
 	if err != nil {
@@ -58,8 +58,8 @@ func GetTarGzLineScanner(path string, callback func(string, *bufio.Scanner) erro
 	return nil
 }
 
-// GetTextLineScanner creates a bufio.Scanner from a plain text file.
-func GetTextLineScanner(path string, callback func(string, *bufio.Scanner) error) error {
+// TextLineScanner creates a bufio.Scanner from a plain text file.
+func TextLineScanner(path string, callback func(string, *bufio.Scanner) error) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
