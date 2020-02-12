@@ -117,6 +117,27 @@ func initTables(dbName, tableName, engine string) error {
 		)
 		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
 	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`
+		CREATE TABLE metadata (
+			key             VARCHAR(128),
+			value           VARCHAR(8192),
+
+			PRIMARY KEY     (key)
+		)
+		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO metadata (key, value) VALUES
+		('version', '0.0.1')
+	`)
 	return err
 }
 
