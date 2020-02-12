@@ -118,7 +118,7 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 		email    string
 		hash     string
 		password string
-		sourceID uint32
+		sourceID int64
 		username string
 	)
 
@@ -139,9 +139,14 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 			case "password":
 				b.WriteString(password)
 			case "source":
-				b.WriteString(sourceid.Source(sourceID))
+				s, err := sourceid.SourceName(sourceID, sourcesDb, c.SourcesTable)
+				if err != nil {
+					l.W(err)
+					return
+				}
+				b.WriteString(s)
 			case "sourceID":
-				b.WriteString(strconv.FormatUint(uint64(sourceID), 10))
+				b.WriteString(strconv.FormatInt(sourceID, 10))
 			case "username":
 				b.WriteString(username)
 			}
