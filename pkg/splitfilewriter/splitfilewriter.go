@@ -13,18 +13,18 @@ const (
 
 // SplitFileWriter is a bufio writer which writes to a different file every `n` writes
 type SplitFileWriter struct {
-	namePrefix string
-	nameSuffix string
-	maxWrites  int
-	fileFlag   int
-	filePerm   os.FileMode
-	bufSize    int
+	NamePrefix string
+	NameSuffix string
+	MaxWrites  int
+	FileFlag   int
+	FilePerm   os.FileMode
+	BufSize    int
 
-	currentFile *os.File
-	currentBuf  *bufio.Writer
+	CurrentFile *os.File
+	CurrentBuf  *bufio.Writer
 
-	writeCount int
-	currentInc int
+	WriteCount int
+	CurrentInc int
 }
 
 // OpenFileNewWriter calls os.OpenFile and then creates a new SplitFileWriter from it
@@ -51,36 +51,36 @@ func OpenFileNewWriterSizeInc(namePrefix, nameSuffix string, currentInc, maxWrit
 
 	w := bufio.NewWriterSize(f, bufSize)
 	return &SplitFileWriter{
-		namePrefix:  namePrefix,
-		nameSuffix:  nameSuffix,
-		maxWrites:   maxWrites,
-		fileFlag:    fileFlag,
-		filePerm:    filePerm,
-		bufSize:     bufSize,
-		currentFile: f,
-		currentBuf:  w,
-		currentInc:  currentInc,
+		NamePrefix:  namePrefix,
+		NameSuffix:  nameSuffix,
+		MaxWrites:   maxWrites,
+		FileFlag:    fileFlag,
+		FilePerm:    filePerm,
+		BufSize:     bufSize,
+		CurrentFile: f,
+		CurrentBuf:  w,
+		CurrentInc:  currentInc,
 	}, nil
 }
 
 // Buffered returns the number of bytes that have been written into the current buffer.
 func (s *SplitFileWriter) Buffered() int {
-	return s.currentBuf.Buffered()
+	return s.CurrentBuf.Buffered()
 }
 
 // Flush writes any buffered data to the underlying io.Writer.
 func (s *SplitFileWriter) Flush() error {
-	return s.currentBuf.Flush()
+	return s.CurrentBuf.Flush()
 }
 
 // ReadFrom implements io.ReaderFrom.
 func (s *SplitFileWriter) ReadFrom(r io.Reader) (int64, error) {
-	return s.currentBuf.ReadFrom(r)
+	return s.CurrentBuf.ReadFrom(r)
 }
 
 // Size returns the size of the underlying buffer in bytes.
 func (s *SplitFileWriter) Size() int {
-	return s.currentBuf.Size()
+	return s.CurrentBuf.Size()
 }
 
 // Reset discards any unflushed buffered data, clears any error, and resets b to write its output to w.
@@ -89,7 +89,7 @@ func (s *SplitFileWriter) Write(p []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return s.currentBuf.Write(p)
+	return s.CurrentBuf.Write(p)
 }
 
 // WriteByte writes a single byte.
@@ -98,7 +98,7 @@ func (s *SplitFileWriter) WriteByte(c byte) error {
 	if err != nil {
 		return err
 	}
-	return s.currentBuf.WriteByte(c)
+	return s.CurrentBuf.WriteByte(c)
 }
 
 // WriteRune writes a single Unicode code point, returning the number of bytes written and any error.
@@ -107,7 +107,7 @@ func (s *SplitFileWriter) WriteRune(r rune) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return s.currentBuf.WriteRune(r)
+	return s.CurrentBuf.WriteRune(r)
 }
 
 // WriteString writes a string. It returns the number of bytes written.
@@ -116,38 +116,38 @@ func (s *SplitFileWriter) WriteString(st string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return s.currentBuf.WriteString(st)
+	return s.CurrentBuf.WriteString(st)
 }
 
 // preWrite increments the writeCount and opens a new file if required
 func (s *SplitFileWriter) preWrite() error {
-	if s.writeCount >= s.maxWrites {
+	if s.WriteCount >= s.MaxWrites {
 		err := s.Flush()
 		if err != nil {
 			return err
 		}
 
-		s.currentInc++
-		n, err := OpenFileNewWriterSizeInc(s.namePrefix, s.nameSuffix, s.currentInc, s.maxWrites, s.fileFlag, s.filePerm, s.bufSize)
+		s.CurrentInc++
+		n, err := OpenFileNewWriterSizeInc(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.BufSize)
 		if err != nil {
 			return err
 		}
 
 		s.copyToSelf(n)
 	}
-	s.writeCount++
+	s.WriteCount++
 	return nil
 }
 
 func (s *SplitFileWriter) copyToSelf(n *SplitFileWriter) {
-	s.namePrefix = n.namePrefix
-	s.nameSuffix = n.nameSuffix
-	s.maxWrites = n.maxWrites
-	s.fileFlag = n.fileFlag
-	s.filePerm = n.filePerm
-	s.bufSize = n.bufSize
-	s.currentFile = n.currentFile
-	s.currentBuf = n.currentBuf
-	s.writeCount = n.writeCount
-	s.currentInc = n.currentInc
+	s.NamePrefix = n.NamePrefix
+	s.NameSuffix = n.NameSuffix
+	s.MaxWrites = n.MaxWrites
+	s.FileFlag = n.FileFlag
+	s.FilePerm = n.FilePerm
+	s.BufSize = n.BufSize
+	s.CurrentFile = n.CurrentFile
+	s.CurrentBuf = n.CurrentBuf
+	s.WriteCount = n.WriteCount
+	s.CurrentInc = n.CurrentInc
 }
