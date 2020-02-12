@@ -14,7 +14,6 @@ import (
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
-	"github.com/darkmattermatt/dumpdb/pkg/reverse"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 	"github.com/spf13/cobra"
@@ -46,23 +45,23 @@ func init() {
 	processCmd.Flags().String("doneLog", "[filesPrefix]_done.log", "log file for processed input files")
 	processCmd.Flags().String("skipLog", "[filesPrefix]_skip.log", "log file for skipped input files")
 
-	processCmd.Flags().String("filesPrefix", time.Now().Format("2006-01-02_15-04-05_"), "processed file prefix")
+	processCmd.Flags().String("filesPrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
 
 	v.BindPFlags(processCmd.Flags())
 }
 
-func getLogFileName(x string) string {
-	return strings.ReplaceAll(v.GetString(x), "[filesPrefix]", c.FilesPrefix)
+func getProcessFilename(s string) string {
+	return strings.ReplaceAll(s, "[filesPrefix]", c.FilesPrefix)
 }
 
 func loadProcessConfig() error {
-	c.OutFileLines = v.GetInt("outputFileLines")
-	c.OutFilePrefix = v.GetString("outputFilePrefix")
-	c.OutFileSuffix = v.GetString("outputFileSuffix")
-	c.ErrLog = v.GetString("errLog")
-	c.DoneLog = v.GetString("doneLog")
-	c.SkipLog = v.GetString("skipLog")
 	c.FilesPrefix = v.GetString("filesPrefix")
+	c.OutFileLines = v.GetInt("outputFileLines")
+	c.OutFilePrefix = getProcessFilename(v.GetString("outputFilePrefix"))
+	c.OutFileSuffix = v.GetString("outputFileSuffix")
+	c.ErrLog = getProcessFilename(v.GetString("errLog"))
+	c.DoneLog = getProcessFilename(v.GetString("doneLog"))
+	c.SkipLog = getProcessFilename(v.GetString("skipLog"))
 	return nil
 }
 
@@ -70,11 +69,11 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	err := loadProcessConfig()
 	l.FatalOnErr(err)
 
-	errFile, err = os.OpenFile(getLogFileName("errLog"), os.O_CREATE|os.O_APPEND, 0)
+	errFile, err = os.OpenFile(c.ErrLog, os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
-	doneFile, err = os.OpenFile(getLogFileName("doneLog"), os.O_CREATE|os.O_APPEND, 0)
+	doneFile, err = os.OpenFile(c.DoneLog, os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
-	skipFile, err = os.OpenFile(getLogFileName("skipLog"), os.O_CREATE|os.O_APPEND, 0)
+	skipFile, err = os.OpenFile(c.SkipLog, os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.OpenFileNewWriter(c.OutFilePrefix, c.OutFileSuffix, c.OutFileLines, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	l.FatalOnErr(err)
@@ -113,11 +112,7 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 			continue
 		}
 
-		if r.EmailRev == "" && r.Email != "" {
-			r.EmailRev = reverse.Reverse(r.Email)
-		}
-
-		parsedArray := []string{r.Source, r.Username, r.EmailRev, r.Hash, r.Password}
+		parsedArray := []string{r.Source, r.Username, r.Email, r.Hash, r.Password}
 		parsedStr := strings.Join(parsedArray, "\t")
 
 		// write string to output file
