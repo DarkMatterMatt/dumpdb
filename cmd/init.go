@@ -112,6 +112,7 @@ func initTables(dbName, tableName, engine string) error {
 			email           VARCHAR(320)        GENERATED ALWAYS AS (REVERSE(email_rev)) VIRTUAL,
 			email_rev       VARCHAR(320),       /* max length 320 https://stackoverflow.com/a/574698/6595777 */
 			username        VARCHAR(128),
+			extra        	VARCHAR(1024),		/* extra data that does not fit in an existing column, e.g. password hints */
 
 			PRIMARY KEY     (id)
 		)
