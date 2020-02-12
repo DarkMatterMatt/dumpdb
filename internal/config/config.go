@@ -19,9 +19,10 @@ type Config struct {
 	OutFileLines  int
 	OutFilePrefix string
 	OutFileSuffix string
+	FilesPrefix   string
 	ErrLog        string
 	DoneLog       string
-	skipLog       string
+	SkipLog       string
 
 	// import
 	Conn     string
