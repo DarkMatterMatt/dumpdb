@@ -30,16 +30,16 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 
 	// Positional args: filesOrFolders: files and/or folders to import
-	searchCmd.Flags().StringP("db", "d", "", "comma separated list of databases to search")
+	searchCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to search")
 	searchCmd.Flags().StringP("connPrefix", "c", "", "connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
 	searchCmd.Flags().StringP("dbTable", "t", "main", "database table name to search. Must be the same for all databases")
 	searchCmd.Flags().StringP("sourcesConn", "C", "", "connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
 	searchCmd.Flags().StringP("sourcesTable", "T", "sources", "SQL connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
 
 	searchCmd.Flags().StringP("query", "Q", "", "the WHERE clause of a SQL query. Yes it's injected, so try not to break your own database")
-	searchCmd.Flags().String("columns", "all", "comma separated list of columns to retrieve from the database")
+	searchCmd.Flags().StringSlice("columns", []string{}, "columns to retrieve from the database")
 
-	searchCmd.MarkFlagRequired("db")
+	searchCmd.MarkFlagRequired("databases")
 	searchCmd.MarkFlagRequired("connPrefix")
 	searchCmd.MarkFlagRequired("query")
 
@@ -47,18 +47,22 @@ func init() {
 }
 
 func loadSearchConfig() error {
-	c.Databases = strings.Split(v.GetString("db"), ",")
+	c.Databases = v.GetStringSlice("databases")
 	c.ConnPrefix = v.GetString("connPrefix")
 	c.DbTable = v.GetString("dbTable")
 	c.SourcesConn = v.GetString("sourcesConn")
 	c.SourcesTable = v.GetString("sourcesTable")
 	c.Query = v.GetString("query")
-	c.Columns = strings.Split(strings.ToLower(v.GetString("columns")), ",")
+	c.Columns = v.GetStringSlice("columns")
 
 	validCols := []string{"email", "hash", "password", "source", "sourceid", "username"}
-	for _, col := range c.Columns {
-		if !stringinslice.StringInSlice(col, validCols) {
-			return errors.New("Invalid column name: " + col)
+	if len(c.Columns) == 0 {
+		c.Columns = validCols
+	} else {
+		for _, col := range c.Columns {
+			if !stringinslice.StringInSlice(col, validCols) {
+				return errors.New("Invalid column name: " + col)
+			}
 		}
 	}
 	return nil
