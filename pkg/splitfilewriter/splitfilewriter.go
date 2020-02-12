@@ -24,11 +24,13 @@ type SplitFileWriter struct {
 
 	WriteCount int
 	CurrentInc int
+
+	NewFileCallback func(*SplitFileWriter) error
 }
 
 // Create calls os.Create and then creates a new SplitFileWriter from it
 func Create(namePrefix, nameSuffix string, maxWrites int) (*SplitFileWriter, error) {
-	s, err := New(namePrefix, nameSuffix, 0, maxWrites, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666, defaultBufSize)
+	s, err := New(namePrefix, nameSuffix, 0, maxWrites, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666, defaultBufSize, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,7 @@ func Create(namePrefix, nameSuffix string, maxWrites int) (*SplitFileWriter, err
 
 // Open calls os.OpenFile and then creates a new SplitFileWriter from it
 func Open(namePrefix, nameSuffix string, maxWrites, fileFlag int, filePerm os.FileMode) (*SplitFileWriter, error) {
-	s, err := New(namePrefix, nameSuffix, 0, maxWrites, fileFlag, filePerm, defaultBufSize)
+	s, err := New(namePrefix, nameSuffix, 0, maxWrites, fileFlag, filePerm, defaultBufSize, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +47,7 @@ func Open(namePrefix, nameSuffix string, maxWrites, fileFlag int, filePerm os.Fi
 }
 
 // New calls os.OpenFile and then creates a new SplitFileWriter from it, setting all struct members
-func New(namePrefix, nameSuffix string, currentInc, maxWrites, fileFlag int, filePerm os.FileMode, bufSize int) (*SplitFileWriter, error) {
+func New(namePrefix, nameSuffix string, currentInc, maxWrites, fileFlag int, filePerm os.FileMode, bufSize int, newFileCallback func(*SplitFileWriter) error) (*SplitFileWriter, error) {
 	name := namePrefix + strconv.Itoa(currentInc) + nameSuffix
 	f, err := os.OpenFile(name, fileFlag, filePerm)
 	if err != nil {
@@ -54,14 +56,15 @@ func New(namePrefix, nameSuffix string, currentInc, maxWrites, fileFlag int, fil
 
 	w := bufio.NewWriterSize(f, bufSize)
 	return &SplitFileWriter{
-		NamePrefix:  namePrefix,
-		NameSuffix:  nameSuffix,
-		MaxWrites:   maxWrites,
-		FileFlag:    fileFlag,
-		FilePerm:    filePerm,
-		CurrentFile: f,
-		CurrentBuf:  w,
-		CurrentInc:  currentInc,
+		NamePrefix:      namePrefix,
+		NameSuffix:      nameSuffix,
+		MaxWrites:       maxWrites,
+		FileFlag:        fileFlag,
+		FilePerm:        filePerm,
+		CurrentFile:     f,
+		CurrentBuf:      w,
+		CurrentInc:      currentInc,
+		NewFileCallback: newFileCallback,
 	}, nil
 }
 
@@ -143,7 +146,12 @@ func (s *SplitFileWriter) preWrite() error {
 		}
 
 		s.CurrentInc++
-		n, err := New(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.CurrentBuf.Size())
+		n, err := New(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.CurrentBuf.Size(), s.NewFileCallback)
+		if err != nil {
+			return err
+		}
+
+		err = s.NewFileCallback(s)
 		if err != nil {
 			return err
 		}
@@ -164,4 +172,5 @@ func (s *SplitFileWriter) copyToSelf(n *SplitFileWriter) {
 	s.CurrentBuf = n.CurrentBuf
 	s.WriteCount = n.WriteCount
 	s.CurrentInc = n.CurrentInc
+	s.NewFileCallback = n.NewFileCallback
 }
