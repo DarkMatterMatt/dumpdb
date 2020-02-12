@@ -5,6 +5,7 @@ package cmd
  */
 
 import (
+	"database/sql"
 	"os"
 	"os/signal"
 
@@ -35,6 +36,8 @@ var (
 	errFile         *os.File
 	outputFile      *splitfilewriter.SplitFileWriter
 	c               config.Config
+	db              *sql.DB
+	sourcesDb       *sql.DB
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
