@@ -48,22 +48,32 @@ func init() {
 
 func loadSearchConfig() error {
 	c.Databases = v.GetStringSlice("databases")
-	c.ConnPrefix = v.GetString("connPrefix")
 	c.DbTable = v.GetString("dbTable")
 	c.SourcesConn = v.GetString("sourcesConn")
 	c.SourcesTable = v.GetString("sourcesTable")
 	c.Query = v.GetString("query")
-	c.Columns = v.GetStringSlice("columns")
 
-	validCols := []string{"email", "hash", "password", "source", "sourceid", "username"}
+	// c.Columns = v.GetStringSlice("columns")
+	dbCols := []string{"email", "hash", "password", "sourceid", "username"}
+	c.Columns = []string{}
 	if len(c.Columns) == 0 {
-		c.Columns = validCols
+		c.Columns = dbCols
+		if c.SourcesConn != "" {
+			c.Columns = append(c.Columns, "source")
+		}
 	} else {
-		for _, col := range c.Columns {
-			if !stringinslice.StringInSlice(col, validCols) {
+		for _, col := range v.GetStringSlice("columns") {
+			col = strings.ToLower(col)
+			if !stringinslice.StringInSlice(col, dbCols) && col != "source" {
 				return errors.New("Invalid column name: " + col)
 			}
+			c.Columns = append(c.Columns, col)
 		}
+	}
+
+	c.ConnPrefix = v.GetString("connPrefix")
+	if !strings.HasSuffix("/", c.ConnPrefix) {
+		c.ConnPrefix += "/"
 	}
 	return nil
 }
@@ -71,6 +81,15 @@ func loadSearchConfig() error {
 func runSearch(cmd *cobra.Command, args []string) {
 	err := loadSearchConfig()
 	l.FatalOnErr(err)
+
+	if stringinslice.StringInSlice("source", c.Columns) {
+		if c.SourcesConn == "" {
+			cmd.Usage()
+			l.F("Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
+		}
+		sourcesDb, err = sql.Open("mysql", c.SourcesConn)
+		l.FatalOnErr(err)
+	}
 
 	l.I("Querying", len(c.Databases), "databases:", strings.Join(c.Databases, ", "))
 	l.V("Output format is tab-delimited as:")
