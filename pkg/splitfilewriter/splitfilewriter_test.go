@@ -18,9 +18,12 @@ func TestSplitFileWriter(t *testing.T) {
 	const numWritesPerFile = 10
 	const writeCount = 888
 	const testString = "Testing abcdefghijkmnopqrstuvwxyz: "
+	dir := os.TempDir() + "/go/github.com/darkmattermatt/splitfilewriter"
+	os.MkdirAll(dir, 0777)
+	prefix := dir + "/test"
 
 	// write files
-	s, err := OpenFileNewWriter("./_TestSplitFileWriter_", ".txt", numWritesPerFile, os.O_RDWR|os.O_CREATE, 0644)
+	s, err := Create(prefix, ".txt", numWritesPerFile)
 	checkErr(t, err)
 	for i := 0; i < writeCount; i++ {
 		_, err = s.WriteString(testString + strconv.Itoa(i) + "\n")
@@ -31,7 +34,7 @@ func TestSplitFileWriter(t *testing.T) {
 
 	// read files
 	for i := 0; i < writeCount; {
-		f, err := os.Open("./_TestSplitFileWriter_" + strconv.Itoa(i/numWritesPerFile) + ".txt")
+		f, err := os.Open(prefix + strconv.Itoa(i/numWritesPerFile) + ".txt")
 		checkErr(t, err)
 
 		b := make([]byte, (len(testString))*numWritesPerFile*2)
@@ -48,11 +51,12 @@ func TestSplitFileWriter(t *testing.T) {
 			t.Errorf("Strings did not match. Expected %s, found %s", str, b)
 		}
 
-		f.Close()
+		err = f.Close()
+		checkErr(t, err)
 	}
 
-	// delete files
+	// delete files, fail silently
 	for i := 0; i < int(math.Ceil(float64(writeCount)/float64(numWritesPerFile))); i++ {
-		os.Remove("./_TestSplitFileWriter_" + strconv.Itoa(i) + ".txt")
+		_ = os.Remove(prefix + strconv.Itoa(i) + ".txt")
 	}
 }
