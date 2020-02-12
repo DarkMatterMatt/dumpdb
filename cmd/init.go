@@ -9,6 +9,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
@@ -80,6 +81,10 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 		l.FatalOnErr(err)
 	}
 
+	var metadata map[string]string
+	metadata["schema_version"] = schemaVersion
+	metadata["created"] = time.Now().Format("2006-01-02 15:04")
+
 	for _, dbName := range dbNames {
 		err = createDatabase(dbName)
 		l.FatalOnErr(err)
@@ -87,7 +92,7 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 		err = createMainTable(dbName, c.Table, c.Engine)
 		l.FatalOnErr(err)
 
-		err = addMetadata(dbName, "schema_version", schemaVersion)
+		err = addMetadata(dbName, metadata)
 		l.FatalOnErr(err)
 	}
 }
@@ -165,16 +170,25 @@ func createMetadataTable(dbName, engine string) error {
 	return err
 }
 
-func addMetadata(dbName, key, value string) error {
-	l.D("addMetadata:" + dbName + ": " + key + "=" + value)
+func addMetadata(dbName string, data map[string]string) error {
+	l.D("addMetadata:" + dbName)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
 
+	var (
+		placeholders []string
+		args         []string
+	)
+	for k, v := range data {
+		placeholders = append(placeholders, "(?, ?)")
+		args = append(args, k, v)
+	}
+
 	_, err = db.Exec(`
 		INSERT INTO metadata (key, value)
-		VALUES (?, ?)
-	`, key, value)
+		VALUES `+strings.Join(placeholders, ",")+`
+	`, args)
 	return err
 }
