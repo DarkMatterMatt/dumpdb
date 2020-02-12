@@ -80,12 +80,7 @@ func (s *SplitFileWriter) ReadFrom(r io.Reader) (int64, error) {
 	return s.CurrentBuf.ReadFrom(r)
 }
 
-// Size returns the size of the underlying buffer in bytes.
-func (s *SplitFileWriter) Size() int {
-	return s.CurrentBuf.Size()
-}
-
-// Reset discards any unflushed buffered data, clears any error, and resets b to write its output to w.
+// Write writes the contents of p into the buffer.
 func (s *SplitFileWriter) Write(p []byte) (int, error) {
 	err := s.preWrite()
 	if err != nil {
