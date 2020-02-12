@@ -10,6 +10,7 @@ import (
 
 	"github.com/darkmattermatt/DumpDB/internal/config"
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
+	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/spf13/cobra"
@@ -32,6 +33,7 @@ var (
 	doneFile        *os.File
 	skipFile        *os.File
 	errFile         *os.File
+	outputFile      *splitfilewriter.SplitFileWriter
 	c               config.Config
 )
 
