@@ -15,6 +15,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const schemaVersion = "1.0.0"
+
 // the `init` command
 var initCmd = &cobra.Command{
 	Use:   "init",
@@ -70,39 +72,41 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 	db, err = sql.Open("mysql", c.ConnPrefix)
 	l.FatalOnErr(err)
 
-	err = initDatabases(dbNames)
-	l.FatalOnErr(err)
-
 	if c.Sources != "" {
-		err = initSourcesTable(c.Sources, c.SourcesTable, c.Engine)
+		err = createDatabase(c.Sources)
+		l.FatalOnErr(err)
+
+		err = createSourcesTable(c.Sources, c.SourcesTable, c.Engine)
 		l.FatalOnErr(err)
 	}
 
 	for _, dbName := range dbNames {
-		err = initTables(dbName, c.Table, c.Engine)
+		err = createDatabase(dbName)
+		l.FatalOnErr(err)
+
+		err = createMainTable(dbName, c.Table, c.Engine)
+		l.FatalOnErr(err)
+
+		err = addMetadata(dbName, "schema_version", schemaVersion)
 		l.FatalOnErr(err)
 	}
 }
 
-func initDatabases(dbNames []string) error {
-	for _, dbName := range dbNames {
-		_, err := db.Exec(`
-			CREATE DATABASE IF NOT EXISTS ` + dbName + `
-		`)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func createDatabase(dbName string) error {
+	l.D("createDatabase: " + dbName)
+	_, err := db.Exec(`
+		CREATE DATABASE IF NOT EXISTS ` + dbName + `
+	`)
+	return err
 }
 
-func initTables(dbName, tableName, engine string) error {
+func createMainTable(dbName, tableName, engine string) error {
+	l.D("createMainTable: " + dbName + "/" + tableName)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
 
-	l.V("Creating " + dbName + "/" + tableName)
 	_, err = db.Exec(`
 		CREATE TABLE ` + tableName + ` (
 			id              INT UNSIGNED        AUTO_INCREMENT,
@@ -118,6 +122,33 @@ func initTables(dbName, tableName, engine string) error {
 		)
 		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
 	`)
+	return err
+}
+
+func createSourcesTable(dbName, tableName, engine string) error {
+	l.D("createSourcesTable: " + dbName + "/" + tableName)
+	_, err := db.Exec(`USE ` + dbName)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`
+		CREATE TABLE ` + tableName + ` (
+			id              INT UNSIGNED        AUTO_INCREMENT,
+			name            VARCHAR(250),       /* 250 is the max length that can be indexed */
+			last_updated    BIGINT              COMMENT 'Unix timestamp (seconds since 00:00:00 UTC 1 January 1970)',
+
+			UNIQUE          (name),
+			PRIMARY KEY     (id)
+		)
+		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
+	`)
+	return err
+}
+
+func createMetadataTable(dbName, engine string) error {
+	l.D("createMetadataTable: " + dbName + "/metadata")
+	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
@@ -131,34 +162,19 @@ func initTables(dbName, tableName, engine string) error {
 		)
 		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
 	`)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(`
-		INSERT INTO metadata (key, value) VALUES
-		('version', '0.0.1')
-	`)
 	return err
 }
 
-func initSourcesTable(dbName, tableName, engine string) error {
+func addMetadata(dbName, key, value string) error {
+	l.D("addMetadata:" + dbName + ": " + key + "=" + value)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
 
-	l.V("Creating " + dbName + "/" + tableName)
 	_, err = db.Exec(`
-		CREATE TABLE ` + tableName + ` (
-			id              INT UNSIGNED        AUTO_INCREMENT,
-			name            VARCHAR(250),       /* 250 is the max length that can be indexed */
-			last_updated    BIGINT              COMMENT 'Unix timestamp (seconds since 00:00:00 UTC 1 January 1970)',
-
-			UNIQUE          (name),
-			PRIMARY KEY     (id)
-		)
-		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
-	`)
+		INSERT INTO metadata (key, value)
+		VALUES (?, ?)
+	`, key, value)
 	return err
 }
