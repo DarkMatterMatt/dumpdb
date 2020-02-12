@@ -1,12 +1,9 @@
 package parseline
 
 import (
-	"database/sql"
 	"errors"
 	"regexp"
 	"strings"
-
-	"github.com/darkmattermatt/dumpdb/internal/getsourceid"
 )
 
 /* Modify this line to match your data. Note that this is ~40% slower than using parseLine.split.example.go */
@@ -17,7 +14,7 @@ var lineFormat = regexp.MustCompile(`(?P<email>.+@.+\..+)[:;](?P<password>.*)`)
 
 // parseLineRegexExample parses a single line and returns a Record
 // Rename this function to `parseLine`, it reads the regex match groups
-func parseLineRegexExample(line, source string, sourceDb *sql.DB, sourceTable string) (Record, error) {
+func parseLineRegexExample(line, source string) (Record, error) {
 	result := Record{}
 
 	// match by regex
@@ -43,6 +40,5 @@ func parseLineRegexExample(line, source string, sourceDb *sql.DB, sourceTable st
 		}
 	}
 	result.Source = source
-	result.SourceID = getsourceid.GetSourceID(source, sourceDb, sourceTable)
 	return result, nil
 }

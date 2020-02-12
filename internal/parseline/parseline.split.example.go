@@ -1,16 +1,13 @@
 package parseline
 
 import (
-	"database/sql"
 	"errors"
 	"strings"
-
-	"github.com/darkmattermatt/dumpdb/internal/getsourceid"
 )
 
 // parseLineSplitExample parses a single line and returns a Record
 // Rename this function to `parseLine` after modifying to suit your data
-func parseLineSplitExample(line, source string, sourceDb *sql.DB, sourceTable string) (Record, error) {
+func parseLineSplitExample(line, source string) (Record, error) {
 	result := Record{}
 
 	// try splitting by :
@@ -30,6 +27,5 @@ func parseLineSplitExample(line, source string, sourceDb *sql.DB, sourceTable st
 	result.Email = r[0]
 	result.Password = r[1]
 	result.Source = source
-	result.SourceID = getsourceid.GetSourceID(source, sourceDb, sourceTable)
 	return result, nil
 }
