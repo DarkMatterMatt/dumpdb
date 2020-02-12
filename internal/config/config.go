@@ -12,4 +12,15 @@ type Config struct {
 	SourcesTable string
 	Query        string
 	Columns      []string
+
+	Conn          string
+	Table         string
+	Engine        string
+	Compress      bool
+	TmpFileLines  int
+	TmpFilePrefix string
+	TmpFileSuffix string
+	ErrLog        string
+	DoneLog       string
+	skipLog       string
 }
