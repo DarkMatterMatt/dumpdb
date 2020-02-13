@@ -75,7 +75,7 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 	skipFile, err = os.OpenFile(c.SkipLog, os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
-	outputFile, err = splitfilewriter.OpenFileNewWriter(c.OutFilePrefix, c.OutFileSuffix, c.OutFileLines, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	outputFile, err = splitfilewriter.Create(c.OutFilePrefix, c.OutFileSuffix, c.OutFileLines)
 	l.FatalOnErr(err)
 
 	for _, path := range filesOrFolders {
