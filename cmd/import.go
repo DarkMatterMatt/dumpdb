@@ -49,7 +49,7 @@ func init() {
 	importCmd.Flags().String("engine", "Aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 	importCmd.Flags().Bool("compress", false, "pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine")
 
-	processCmd.Flags().String("filesPrefix", "", "temporary processed file prefix")
+	importCmd.Flags().String("filesPrefix", "", "temporary processed file prefix")
 
 	importCmd.Flags().Int("tmpFileLines", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
 	importCmd.Flags().String("tmpFilePrefix", "[dbName]_", "temporary processed file prefix")
