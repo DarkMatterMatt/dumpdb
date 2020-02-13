@@ -12,9 +12,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/darkmattermatt/DumpDB/internal/sourceid"
-	"github.com/darkmattermatt/DumpDB/pkg/stringinslice"
+	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
+	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
@@ -55,7 +55,6 @@ func loadSearchConfig() error {
 
 	// c.Columns = v.GetStringSlice("columns")
 	dbCols := []string{"email", "hash", "password", "sourceid", "username"}
-	c.Columns = []string{}
 	if len(c.Columns) == 0 {
 		c.Columns = dbCols
 		if c.SourcesConn != "" {

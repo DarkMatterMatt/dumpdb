@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/darkmattermatt/DumpDB/internal/config"
+	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 
