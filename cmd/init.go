@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const schemaVersion = "1.0.0"
+const schemaVersion = "0.0.2"
 
 // the `init` command
 var initCmd = &cobra.Command{
@@ -145,7 +145,6 @@ func createSourcesTable(dbName, tableName, engine string) error {
 		CREATE TABLE ` + tableName + ` (
 			id              INT UNSIGNED        AUTO_INCREMENT,
 			name            VARCHAR(250),       /* 250 is the max length that can be indexed */
-			last_updated    BIGINT              COMMENT 'Unix timestamp (seconds since 00:00:00 UTC 1 January 1970)',
 
 			UNIQUE          (name),
 			PRIMARY KEY     (id)
@@ -193,6 +192,7 @@ func addMetadata(dbName string, data map[string]string) error {
 	_, err = db.Exec(`
 		INSERT INTO metadata (k, v)
 		VALUES `+strings.Join(placeholders, ", ")+`
+		ON DUPLICATE KEY UPDATE v=v
 	`, args...)
 	return err
 }
