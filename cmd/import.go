@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
@@ -149,16 +150,14 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		if r.EmailRev == "" && r.Email != "" {
 			r.EmailRev = reverse.Reverse(r.Email)
 		}
-		r.SourceID = sourceid.SourceID(r.Source, sourcesDb, c.SourcesTable)
+		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, c.SourcesTable)
+		l.FatalOnErr((err))
 
-		parsedArray := []string{r.SourceID, r.Username, r.EmailRev, r.Hash, r.Password}
-		parsedStr := strings.Join(parsedArray, "\t")
+		arr := []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password}
 
 		// write string to output file
-		_, err = outputFile.WriteString(parsedStr + "\n")
-		if err != nil {
-			l.FatalOnErr(err)
-		}
+		_, err = outputFile.WriteString(strings.Join(arr, "\t") + "\n")
+		l.FatalOnErr(err)
 	}
 	doneFile.WriteString(path + "\n")
 	return nil
