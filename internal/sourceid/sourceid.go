@@ -2,7 +2,6 @@ package sourceid
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -33,7 +32,7 @@ func SourceName(id int64, sourcesDb *sql.DB, sourcesTable string) (string, error
 	`, id).Scan(&s)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "CouldNotFindSource", nil
+			s = "CouldNotFindSource"
 		}
 		return "", err
 	}
@@ -69,13 +68,13 @@ func SourceID(s string, sourcesDb *sql.DB, sourcesTable string) (int64, error) {
 		ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)
 	`, s)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	// get id from database
 	id, err := res.LastInsertId()
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 
 	// save in cache
