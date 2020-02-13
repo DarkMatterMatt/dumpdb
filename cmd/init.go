@@ -53,7 +53,7 @@ func loadInitConfig(cmd *cobra.Command) {
 	c.SourcesTable = v.GetString("sourcesTable")
 	c.Engine = strings.ToLower(v.GetString("engine"))
 
-	validEngines := []string{"aria", "myisam", "innodb"}
+	validEngines := []string{"aria", "myisam"}
 	if !stringinslice.StringInSlice(c.Engine, validEngines) {
 		l.R("Error: unknown database engine: " + c.Engine + ". Valid options are: " + strings.Join(validEngines, ", ") + "\n")
 		cmd.Usage()
@@ -93,6 +93,9 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 		err = createMainTable(dbName, c.Table, c.Engine)
 		l.FatalOnErr(err)
 
+		err = createMetadataTable(dbName, c.Engine)
+		l.FatalOnErr(err)
+
 		err = addMetadata(dbName, metadata)
 		l.FatalOnErr(err)
 	}
@@ -101,7 +104,7 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 func createDatabase(dbName string) error {
 	l.D("createDatabase: " + dbName)
 	_, err := db.Exec(`
-		CREATE DATABASE IF NOT EXISTS ` + dbName + `
+		CREATE DATABASE ` + dbName + `
 	`)
 	return err
 }
@@ -161,10 +164,10 @@ func createMetadataTable(dbName, engine string) error {
 
 	_, err = db.Exec(`
 		CREATE TABLE metadata (
-			key             VARCHAR(128),
-			value           VARCHAR(8192),
+			k	VARCHAR(128),
+			v	VARCHAR(8192),
 
-			PRIMARY KEY     (key)
+			PRIMARY KEY		(k)
 		)
 		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
 	`)
@@ -180,7 +183,7 @@ func addMetadata(dbName string, data map[string]string) error {
 
 	var (
 		placeholders []string
-		args         []string
+		args         []interface{}
 	)
 	for k, v := range data {
 		placeholders = append(placeholders, "(?, ?)")
@@ -188,8 +191,8 @@ func addMetadata(dbName string, data map[string]string) error {
 	}
 
 	_, err = db.Exec(`
-		INSERT INTO metadata (key, value)
-		VALUES `+strings.Join(placeholders, ",")+`
-	`, args)
+		INSERT INTO metadata (k, v)
+		VALUES `+strings.Join(placeholders, ", ")+`
+	`, args...)
 	return err
 }
