@@ -32,7 +32,7 @@ func init() {
 	// Positional args: filesOrFolders: files and/or folders to import
 	searchCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to search")
 	searchCmd.Flags().StringP("connPrefix", "c", "", "connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
-	searchCmd.Flags().StringP("dbTable", "t", "main", "database table name to search. Must be the same for all databases")
+	searchCmd.Flags().StringP("table", "t", "main", "database table name to search. Must be the same for all databases")
 	searchCmd.Flags().StringP("sourcesConn", "C", "", "connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
 	searchCmd.Flags().StringP("sourcesTable", "T", "sources", "SQL connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
 
@@ -48,7 +48,7 @@ func init() {
 
 func loadSearchConfig() error {
 	c.Databases = v.GetStringSlice("databases")
-	c.DbTable = v.GetString("dbTable")
+	c.Table = v.GetString("table")
 	c.SourcesConn = v.GetString("sourcesConn")
 	c.SourcesTable = v.GetString("sourcesTable")
 	c.Query = v.GetString("query")

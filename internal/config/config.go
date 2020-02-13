@@ -9,7 +9,6 @@ type Config struct {
 	// search
 	Databases    []string
 	ConnPrefix   string
-	DbTable      string
 	SourcesConn  string
 	SourcesTable string
 	Query        string
