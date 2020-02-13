@@ -6,6 +6,9 @@ type Config struct {
 	Verbosity  int
 	ConfigFile string
 
+	// init
+	Sources string
+
 	// search
 	Databases    []string
 	ConnPrefix   string
