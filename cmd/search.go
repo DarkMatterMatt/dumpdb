@@ -152,31 +152,30 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 			return
 		}
 
-		var b strings.Builder
+		var arr []string
 		for _, col := range c.Columns {
 			switch col {
 			case "email":
-				b.WriteString(email)
+				arr = append(arr, email)
 			case "hash":
-				b.WriteString(hash)
+				arr = append(arr, hash)
 			case "password":
-				b.WriteString(password)
+				arr = append(arr, password)
 			case "source":
 				s, err := sourceid.SourceName(sourceID, sourcesDb, c.SourcesTable)
 				if err != nil {
 					l.W(err)
 					return
 				}
-				b.WriteString(s)
-			case "sourceID":
-				b.WriteString(strconv.FormatInt(sourceID, 10))
+				arr = append(arr, s)
+			case "sourceid":
+				arr = append(arr, strconv.FormatInt(sourceID, 10))
 			case "username":
-				b.WriteString(username)
+				arr = append(arr, username)
 			}
-			b.WriteString("\t")
 		}
-		// trim trailing tab, then print
-		l.R(b.String()[:b.Len()-1])
+		// print result to stdout
+		l.R(strings.Join(arr, "\t"))
 	}
 
 	err = rows.Err()
