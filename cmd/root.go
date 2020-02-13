@@ -12,6 +12,7 @@ import (
 	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
+	_ "github.com/go-sql-driver/mysql" // import driver for `sql`
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/spf13/cobra"
