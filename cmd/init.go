@@ -81,9 +81,10 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 		l.FatalOnErr(err)
 	}
 
-	var metadata map[string]string
-	metadata["schema_version"] = schemaVersion
-	metadata["created"] = time.Now().Format("2006-01-02 15:04")
+	metadata := map[string]string{
+		"schema_version": schemaVersion,
+		"created":        time.Now().Format("2006-01-02 15:04"),
+	}
 
 	for _, dbName := range dbNames {
 		err = createDatabase(dbName)
