@@ -19,6 +19,19 @@ Output levels are as follows:
 - `v=3`: Verbosity. Set this flag multiple times for more verbosity
 - `q=0`: Quiet. This is subtracted from the verbosity
 
+## Init
+
+Initialise a database for importing.
+
+**Parameters:**
+
+- `databaseNames+`: One or more positional arguments of databases to initialise
+- `conn`: connection string for the MySQL. Like user:pass@tcp(127.0.0.1:3306)
+- `table="main"`: Table name for databases
+- `sources=""`: Initialise the following database as the one to store sources in
+- `sourcesTable="sources"`: Database table name to store sources in
+- `engine="Aria"`: The database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL
+
 ## Process
 
 Process files or folders into a regularised tab-delimited text file.
