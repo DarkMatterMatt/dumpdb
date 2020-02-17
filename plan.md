@@ -69,5 +69,5 @@ Search multiple dump databases simultaneously.
 - `query=""`: The WHERE clause of a SQL query. Yes it's injected, so try not to break your own database
 - `columns="all"`: Comma separated list of columns to retrieve from the database
 - `conn=`: Connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)
-- `db=`: Comma separated list of databases to search
+- `databases=`: Comma separated list of databases to search
 - `sourcesConn=""`: Connection string for the sources database. Like `user:pass@tcp(127.0.0.1:3306)/sources`
