@@ -31,16 +31,14 @@ func init() {
 
 	// Positional args: filesOrFolders: files and/or folders to import
 	searchCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to search")
-	searchCmd.Flags().StringP("connPrefix", "c", "", "connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
-	searchCmd.Flags().StringP("table", "t", "main", "database table name to search. Must be the same for all databases")
+	searchCmd.Flags().StringP("conn", "c", "", "connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
 	searchCmd.Flags().StringP("sourcesConn", "C", "", "connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
-	searchCmd.Flags().StringP("sourcesTable", "T", "sources", "SQL connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
 
 	searchCmd.Flags().StringP("query", "Q", "", "the WHERE clause of a SQL query. Yes it's injected, so try not to break your own database")
 	searchCmd.Flags().StringSlice("columns", []string{}, "columns to retrieve from the database")
 
 	searchCmd.MarkFlagRequired("databases")
-	searchCmd.MarkFlagRequired("connPrefix")
+	searchCmd.MarkFlagRequired("conn")
 	searchCmd.MarkFlagRequired("query")
 
 	v.BindPFlags(searchCmd.Flags())
@@ -48,9 +46,7 @@ func init() {
 
 func loadSearchConfig() error {
 	c.Databases = v.GetStringSlice("databases")
-	c.Table = v.GetString("table")
 	c.SourcesConn = v.GetString("sourcesConn")
-	c.SourcesTable = v.GetString("sourcesTable")
 	c.Query = v.GetString("query")
 
 	// c.Columns = v.GetStringSlice("columns")
@@ -70,9 +66,9 @@ func loadSearchConfig() error {
 		}
 	}
 
-	c.ConnPrefix = v.GetString("connPrefix")
-	if !strings.HasSuffix("/", c.ConnPrefix) {
-		c.ConnPrefix += "/"
+	c.Conn = v.GetString("conn")
+	if !strings.HasSuffix("/", c.Conn) {
+		c.Conn += "/"
 	}
 	return nil
 }
@@ -117,7 +113,7 @@ func preferUsingEmailRev(stmt string) string {
 func queryDatabase(dbName string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	dbConn := c.ConnPrefix + dbName
+	dbConn := c.Conn + dbName
 	l.D("queryDatabase", "dbConn:", dbConn)
 	db, err := sql.Open("mysql", dbConn)
 	if err != nil {
@@ -161,7 +157,7 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 			case "password":
 				arr = append(arr, password)
 			case "source":
-				s, err := sourceid.SourceName(sourceID, sourcesDb, c.SourcesTable)
+				s, err := sourceid.SourceName(sourceID, sourcesDb, sourcesTable)
 				if err != nil {
 					l.W(err)
 					return
