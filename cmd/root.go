@@ -61,6 +61,11 @@ func init() {
 	rootCmd.PersistentFlags().CountP("verbose", "v", "verbosity. Set this flag multiple times for more verbosity")
 	rootCmd.PersistentFlags().CountP("quiet", "q", "quiet. This is subtracted from the verbosity")
 
+	// initialize logger
+	l.GetVerbosityWith(func() int {
+		return c.Verbosity
+	})
+
 	// listen for CTRL+C
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt)
@@ -77,11 +82,6 @@ func initConfig() {
 	v.BindPFlags(rootCmd.Flags())
 	c.ConfigFile = v.GetString("config")
 	c.Verbosity = l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
-
-	// initialize logger
-	l.GetVerbosityWith(func() int {
-		return c.Verbosity
-	})
 
 	// read in environment variables that match
 	v.SetEnvPrefix("ddb")
