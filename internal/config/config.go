@@ -10,25 +10,17 @@ type Config struct {
 	Sources string
 
 	// search
-	Databases    []string
-	ConnPrefix   string
-	SourcesConn  string
-	SourcesTable string
-	Query        string
-	Columns      []string
+	Databases   []string
+	SourcesConn string
+	Query       string
+	Columns     []string
 
 	// process
-	OutFileLines  int
-	OutFilePrefix string
-	OutFileSuffix string
-	FilesPrefix   string
-	ErrLog        string
-	DoneLog       string
-	SkipLog       string
+	BatchSize  int
+	FilePrefix string
 
 	// import
 	Conn     string
-	Table    string
 	Engine   string
 	Compress bool
 }
