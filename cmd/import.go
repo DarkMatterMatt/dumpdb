@@ -128,7 +128,7 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		if r.EmailRev == "" && r.Email != "" {
 			r.EmailRev = reverse.Reverse(r.Email)
 		}
-		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, c.SourcesTable)
+		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
 		l.FatalOnErr((err))
 
 		arr := []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password}
