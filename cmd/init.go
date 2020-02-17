@@ -7,7 +7,6 @@ package cmd
 import (
 	"database/sql"
 	"errors"
-	"os"
 	"strings"
 	"time"
 
@@ -52,9 +51,7 @@ func loadInitConfig(cmd *cobra.Command) {
 
 	validEngines := []string{"aria", "myisam"}
 	if !stringinslice.StringInSlice(c.Engine, validEngines) {
-		l.R("Error: unknown database engine: " + c.Engine + ". Valid options are: " + strings.Join(validEngines, ", ") + "\n")
-		cmd.Usage()
-		os.Exit(1)
+		config.ShowUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
 	}
 
 	c.Conn = v.GetString("conn")

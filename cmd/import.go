@@ -56,7 +56,7 @@ func init() {
 	importCmd.MarkFlagRequired("sourcesConn")
 }
 
-func loadImportConfig() error {
+func loadImportConfig(cmd *cobra.Command) {
 	c.Conn = v.GetString("conn")
 	c.SourcesConn = v.GetString("sourcesConn")
 	c.Engine = v.GetString("engine")
@@ -64,15 +64,12 @@ func loadImportConfig() error {
 
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = v.GetString("filePrefix")
-
-	return nil
 }
 
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
-	l.I("import called")
-	err := loadImportConfig()
-	l.FatalOnErr(err)
+	loadImportConfig(cmd)
 
+	var err error
 	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
 	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_CREATE|os.O_APPEND, 0)

@@ -6,12 +6,12 @@ package cmd
 
 import (
 	"database/sql"
-	"errors"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
@@ -45,7 +45,7 @@ func init() {
 	searchCmd.MarkFlagRequired("query")
 }
 
-func loadSearchConfig() error {
+func loadSearchConfig(cmd *cobra.Command) {
 	c.Databases = v.GetStringSlice("databases")
 	c.SourcesConn = v.GetString("sourcesConn")
 	c.Query = v.GetString("query")
@@ -61,7 +61,7 @@ func loadSearchConfig() error {
 		for _, col := range v.GetStringSlice("columns") {
 			col = strings.ToLower(col)
 			if !stringinslice.StringInSlice(col, dbCols) && col != "source" {
-				return errors.New("Invalid column name: " + col)
+				config.ShowUsage(cmd, "Invalid column name: "+col)
 			}
 			c.Columns = append(c.Columns, col)
 		}
@@ -71,18 +71,16 @@ func loadSearchConfig() error {
 	if !strings.HasSuffix("/", c.Conn) {
 		c.Conn += "/"
 	}
-	return nil
 }
 
 func runSearch(cmd *cobra.Command, args []string) {
-	err := loadSearchConfig()
-	l.FatalOnErr(err)
+	loadSearchConfig(cmd)
 
 	if stringinslice.StringInSlice("source", c.Columns) {
 		if c.SourcesConn == "" {
-			cmd.Usage()
-			l.F("Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
+			config.ShowUsage(cmd, "Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
 		}
+		var err error
 		sourcesDb, err = sql.Open("mysql", c.SourcesConn)
 		l.FatalOnErr(err)
 	}

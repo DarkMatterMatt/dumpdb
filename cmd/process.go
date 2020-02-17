@@ -44,16 +44,15 @@ func init() {
 	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
 }
 
-func loadProcessConfig() error {
+func loadProcessConfig(cmd *cobra.Command) {
 	c.FilePrefix = v.GetString("filePrefix")
 	c.BatchSize = v.GetInt("batchSize")
-	return nil
 }
 
 func runProcess(cmd *cobra.Command, filesOrFolders []string) {
-	err := loadProcessConfig()
-	l.FatalOnErr(err)
+	loadProcessConfig(cmd)
 
+	var err error
 	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
 	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_CREATE|os.O_APPEND, 0)
