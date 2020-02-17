@@ -37,31 +37,15 @@ func init() {
 	rootCmd.AddCommand(processCmd)
 
 	// Positional args: filesOrFolders: files and/or folders to import
-	processCmd.Flags().Int("outputFileLines", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
-	processCmd.Flags().String("outputFilePrefix", "[filesPrefix]_", "temporary processed file prefix")
-	processCmd.Flags().String("outputFileSuffix", ".txt", "temporary processed file suffix")
-
-	processCmd.Flags().String("errLog", "[filesPrefix]_err.log", "log file for unparsed lines")
-	processCmd.Flags().String("doneLog", "[filesPrefix]_done.log", "log file for processed input files")
-	processCmd.Flags().String("skipLog", "[filesPrefix]_skip.log", "log file for skipped input files")
-
-	processCmd.Flags().String("filesPrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
+	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
+	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
 
 	v.BindPFlags(processCmd.Flags())
 }
 
-func getProcessFilename(s string) string {
-	return strings.ReplaceAll(s, "[filesPrefix]", c.FilesPrefix)
-}
-
 func loadProcessConfig() error {
-	c.FilesPrefix = v.GetString("filesPrefix")
-	c.OutFileLines = v.GetInt("outputFileLines")
-	c.OutFilePrefix = getProcessFilename(v.GetString("outputFilePrefix"))
-	c.OutFileSuffix = v.GetString("outputFileSuffix")
-	c.ErrLog = getProcessFilename(v.GetString("errLog"))
-	c.DoneLog = getProcessFilename(v.GetString("doneLog"))
-	c.SkipLog = getProcessFilename(v.GetString("skipLog"))
+	c.FilePrefix = v.GetString("filePrefix")
+	c.BatchSize = v.GetInt("batchSize")
 	return nil
 }
 
@@ -69,13 +53,13 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	err := loadProcessConfig()
 	l.FatalOnErr(err)
 
-	errFile, err = os.OpenFile(c.ErrLog, os.O_CREATE|os.O_APPEND, 0)
+	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
-	doneFile, err = os.OpenFile(c.DoneLog, os.O_CREATE|os.O_APPEND, 0)
+	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
-	skipFile, err = os.OpenFile(c.SkipLog, os.O_CREATE|os.O_APPEND, 0)
+	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_CREATE|os.O_APPEND, 0)
 	l.FatalOnErr(err)
-	outputFile, err = splitfilewriter.Create(c.OutFilePrefix, c.OutFileSuffix, c.OutFileLines)
+	outputFile, err = splitfilewriter.Create(c.FilePrefix+"_output_", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
 
 	for _, path := range filesOrFolders {
