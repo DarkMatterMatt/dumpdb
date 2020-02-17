@@ -21,6 +21,12 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	mainTable     = "main"
+	sourcesTable  = "sources"
+	metadataTable = "metadata"
+)
+
 var v = viper.NewWithOptions(viper.EnvKeyReplacer(camelcase2underscore.NewCamelcase2UnderscoreReplacer()))
 
 // the base command when called without any subcommands
