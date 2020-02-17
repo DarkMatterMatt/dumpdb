@@ -37,20 +37,15 @@ func init() {
 
 	// Positional args: databaseNames: the names of databases to initialise
 	initCmd.Flags().StringP("conn", "c", "", "connection string for the MySQL. Like user:pass@tcp(127.0.0.1:3306)")
-	initCmd.Flags().StringP("table", "t", "main", "database table name to insert into")
 	initCmd.Flags().StringP("sources", "s", "", "initialise the sources directory")
-	initCmd.Flags().StringP("sourcesTable", "T", "sources", "database table name to store sources in")
 	initCmd.Flags().String("engine", "Aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 
 	initCmd.MarkFlagRequired("conn")
-
 	v.BindPFlags(initCmd.Flags())
 }
 
 func loadInitConfig(cmd *cobra.Command) {
-	c.Table = v.GetString("table")
 	c.Sources = v.GetString("sources")
-	c.SourcesTable = v.GetString("sourcesTable")
 	c.Engine = strings.ToLower(v.GetString("engine"))
 
 	validEngines := []string{"aria", "myisam"}
@@ -60,9 +55,9 @@ func loadInitConfig(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	c.ConnPrefix = v.GetString("conn")
-	if !strings.HasSuffix("/", c.ConnPrefix) {
-		c.ConnPrefix += "/"
+	c.Conn = v.GetString("conn")
+	if !strings.HasSuffix("/", c.Conn) {
+		c.Conn += "/"
 	}
 }
 
@@ -70,14 +65,14 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 	loadInitConfig(cmd)
 
 	var err error
-	db, err = sql.Open("mysql", c.ConnPrefix)
+	db, err = sql.Open("mysql", c.Conn)
 	l.FatalOnErr(err)
 
 	if c.Sources != "" {
 		err = createDatabase(c.Sources)
 		l.FatalOnErr(err)
 
-		err = createSourcesTable(c.Sources, c.SourcesTable, c.Engine)
+		err = createSourcesTable(c.Sources, c.Engine)
 		l.FatalOnErr(err)
 	}
 
@@ -90,7 +85,7 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 		err = createDatabase(dbName)
 		l.FatalOnErr(err)
 
-		err = createMainTable(dbName, c.Table, c.Engine)
+		err = createMainTable(dbName, c.Engine)
 		l.FatalOnErr(err)
 
 		err = createMetadataTable(dbName, c.Engine)
@@ -109,15 +104,15 @@ func createDatabase(dbName string) error {
 	return err
 }
 
-func createMainTable(dbName, tableName, engine string) error {
-	l.D("createMainTable: " + dbName + "/" + tableName)
+func createMainTable(dbName, engine string) error {
+	l.D("createMainTable: " + dbName + "/" + mainTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.Exec(`
-		CREATE TABLE ` + tableName + ` (
+		CREATE TABLE ` + mainTable + ` (
 			id              INT UNSIGNED        AUTO_INCREMENT,
 			hash            VARCHAR(256),
 			password        VARCHAR(128),
@@ -134,15 +129,15 @@ func createMainTable(dbName, tableName, engine string) error {
 	return err
 }
 
-func createSourcesTable(dbName, tableName, engine string) error {
-	l.D("createSourcesTable: " + dbName + "/" + tableName)
+func createSourcesTable(dbName, engine string) error {
+	l.D("createSourcesTable: " + dbName + "/" + sourcesTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.Exec(`
-		CREATE TABLE ` + tableName + ` (
+		CREATE TABLE ` + sourcesTable + ` (
 			id              INT UNSIGNED        AUTO_INCREMENT,
 			name            VARCHAR(250),       /* 250 is the max length that can be indexed */
 
@@ -155,14 +150,14 @@ func createSourcesTable(dbName, tableName, engine string) error {
 }
 
 func createMetadataTable(dbName, engine string) error {
-	l.D("createMetadataTable: " + dbName + "/metadata")
+	l.D("createMetadataTable: " + dbName + "/" + metadataTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.Exec(`
-		CREATE TABLE metadata (
+		CREATE TABLE ` + metadataTable + ` (
 			k	VARCHAR(128),
 			v	VARCHAR(8192),
 
@@ -190,7 +185,7 @@ func addMetadata(dbName string, data map[string]string) error {
 	}
 
 	_, err = db.Exec(`
-		INSERT INTO metadata (k, v)
+		INSERT INTO `+metadataTable+` (k, v)
 		VALUES `+strings.Join(placeholders, ", ")+`
 		ON DUPLICATE KEY UPDATE v=v
 	`, args...)
