@@ -71,6 +71,9 @@ func loadSearchConfig(cmd *cobra.Command) {
 	if !strings.HasSuffix("/", c.Conn) {
 		c.Conn += "/"
 	}
+	if !config.ValidDSNConn(c.Conn) {
+		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+	}
 }
 
 func runSearch(cmd *cobra.Command, args []string) {
