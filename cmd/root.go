@@ -55,18 +55,11 @@ func Execute() {
 }
 
 func init() {
-	// initialize logger
-	l.GetVerbosityWith(func() int {
-		return c.Verbosity
-	})
-
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.dumpdb.yaml)")
 	rootCmd.PersistentFlags().CountP("verbose", "v", "verbosity. Set this flag multiple times for more verbosity")
 	rootCmd.PersistentFlags().CountP("quiet", "q", "quiet. This is subtracted from the verbosity")
-
-	v.BindPFlags(rootCmd.PersistentFlags())
 
 	// listen for CTRL+C
 	signalChannel := make(chan os.Signal, 1)
@@ -80,6 +73,16 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set
 func initConfig() {
+	// store settings in config map
+	v.BindPFlags(rootCmd.Flags())
+	c.ConfigFile = v.GetString("config")
+	c.Verbosity = l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
+
+	// initialize logger
+	l.GetVerbosityWith(func() int {
+		return c.Verbosity
+	})
+
 	// read in environment variables that match
 	v.SetEnvPrefix("ddb")
 	v.AutomaticEnv()
@@ -101,8 +104,4 @@ func initConfig() {
 	if err := v.ReadInConfig(); err == nil {
 		l.V("Using config file:", v.ConfigFileUsed())
 	}
-
-	// store settings in config map
-	c.ConfigFile = v.GetString("config")
-	c.Verbosity = l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
 }

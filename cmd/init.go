@@ -24,6 +24,9 @@ var initCmd = &cobra.Command{
 	Short: "Initialise a database to prepare for importing.",
 	Long:  "",
 	Run:   runInit,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		v.BindPFlags(cmd.Flags())
+	},
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Missing database names to process")
@@ -41,7 +44,6 @@ func init() {
 	initCmd.Flags().String("engine", "Aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 
 	initCmd.MarkFlagRequired("conn")
-	v.BindPFlags(initCmd.Flags())
 }
 
 func loadInitConfig(cmd *cobra.Command) {

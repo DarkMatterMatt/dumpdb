@@ -29,6 +29,9 @@ var importCmd = &cobra.Command{
 	Short: "Import files or folders into a database.",
 	Long:  "",
 	Run:   runImport,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		v.BindPFlags(cmd.Flags())
+	},
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Missing files to import")
@@ -51,7 +54,6 @@ func init() {
 
 	importCmd.MarkFlagRequired("conn")
 	importCmd.MarkFlagRequired("sourcesConn")
-	v.BindPFlags(importCmd.Flags())
 }
 
 func loadImportConfig() error {

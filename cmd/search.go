@@ -24,6 +24,9 @@ var searchCmd = &cobra.Command{
 	Short: "Search multiple dump databases simultaneously.",
 	Long:  "",
 	Run:   runSearch,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		v.BindPFlags(cmd.Flags())
+	},
 }
 
 func init() {
@@ -40,8 +43,6 @@ func init() {
 	searchCmd.MarkFlagRequired("databases")
 	searchCmd.MarkFlagRequired("conn")
 	searchCmd.MarkFlagRequired("query")
-
-	v.BindPFlags(searchCmd.Flags())
 }
 
 func loadSearchConfig() error {

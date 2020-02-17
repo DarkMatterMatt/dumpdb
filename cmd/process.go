@@ -25,6 +25,9 @@ var processCmd = &cobra.Command{
 	Short: "Process files or folders into a regularised tab-delimited text file.",
 	Long:  "",
 	Run:   runProcess,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		v.BindPFlags(cmd.Flags())
+	},
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Missing files to process")
@@ -39,8 +42,6 @@ func init() {
 	// Positional args: filesOrFolders: files and/or folders to import
 	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
 	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
-
-	v.BindPFlags(processCmd.Flags())
 }
 
 func loadProcessConfig() error {
