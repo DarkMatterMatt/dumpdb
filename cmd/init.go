@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/darkmattermatt/dumpdb/internal/config"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
