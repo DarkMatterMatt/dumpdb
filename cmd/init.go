@@ -56,7 +56,7 @@ func loadInitConfig(cmd *cobra.Command) {
 	}
 
 	c.Conn = v.GetString("conn")
-	if !strings.HasSuffix("/", c.Conn) {
+	if !strings.HasSuffix(c.Conn, "/") {
 		c.Conn += "/"
 	}
 }
@@ -65,6 +65,7 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 	loadInitConfig(cmd)
 
 	var err error
+	l.D("Using MySQL connection string: " + c.Conn)
 	db, err = sql.Open("mysql", c.Conn)
 	l.FatalOnErr(err)
 
