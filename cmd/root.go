@@ -31,7 +31,7 @@ var v = viper.NewWithOptions(viper.EnvKeyReplacer(camelcase2underscore.NewCamelc
 
 // the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "DumpDB",
+	Use:   "dumpdb",
 	Short: "DumpDB imports credential dumps into a database to improve search performance.",
 	Long:  "",
 }
