@@ -11,26 +11,25 @@ type Config struct {
 	ConfigFile string
 
 	// init
-	Sources string
+	Databases       []string
+	Conn            string
+	SourcesDatabase string
+	Engine          string
 
 	// search
-	Databases   []string
-	SourcesConn string
-	Query       string
-	Columns     []string
-
-	// process
-	BatchSize  int
-	FilePrefix string
+	Query   string
+	Columns []string
 
 	// import
-	Conn     string
-	Engine   string
-	Compress bool
+	FilesOrFolders string
+	Database       string
+	Compress       bool
+	BatchSize      int
+	FilePrefix     string
 }
 
-// DsnPattern matches a string beginning with `user:pass@tcp(127.0.0.1:3306)`
-var DsnPattern = regexp.MustCompile(`^\w+:\w*@tcp\([\w\.]+:\d+\)`)
+// DsnPattern matches a string in the format `user:pass@tcp(127.0.0.1:3306)`
+var DsnPattern = regexp.MustCompile(`^\w+:\w*@tcp\([\w\.]+:\d+\)$`)
 
 // ValidDSNConn checks that a string is in the format `user:pass@tcp(127.0.0.1:3306)`
 func ValidDSNConn(s string) bool {

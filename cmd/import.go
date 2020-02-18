@@ -45,40 +45,34 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 
 	// Positional args: filesOrFolders: files and/or folders to import
-	importCmd.Flags().StringP("conn", "c", "", "connection string for the SQL database. Like user:pass@tcp(127.0.0.1:3306)/collection1")
-	importCmd.Flags().StringP("sourcesConn", "C", "", "connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
-	importCmd.Flags().String("engine", "Aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
+	importCmd.Flags().StringP("conn", "c", "", "connection string for the SQL database. Like user:pass@tcp(127.0.0.1:3306)")
+	importCmd.Flags().StringP("database", "d", "", "database name to import into")
+	importCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to store sources in")
+	importCmd.Flags().StringP("engine", "e", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 	importCmd.Flags().Bool("compress", false, "pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine")
 
 	importCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
-	importCmd.Flags().String("filePrefix", "", "temporary processed file prefix")
+	importCmd.Flags().StringP("filePrefix", "o", "[database]_", "temporary processed file prefix")
 
 	importCmd.MarkFlagRequired("conn")
-	importCmd.MarkFlagRequired("sourcesConn")
+	importCmd.MarkFlagRequired("database")
+	importCmd.MarkFlagRequired("sourcesDatabase")
 }
 
 func loadImportConfig(cmd *cobra.Command) {
+	c.Database = v.GetString("database")
+	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Engine = v.GetString("engine")
 	c.Compress = v.GetBool("compress")
 
 	c.BatchSize = v.GetInt("batchSize")
-	c.FilePrefix = v.GetString("filePrefix")
+	c.FilePrefix = strings.ReplaceAll(v.GetString("filePrefix"), "[database]", c.Database)
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
 		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
-	if strings.HasSuffix(c.Conn, ")") {
-		c.Conn += "/"
-	}
-
-	c.SourcesConn = v.GetString("sourcesConn")
-	if !config.ValidDSNConn(c.SourcesConn) {
-		showUsage(cmd, "Invalid MySQL connection string "+c.SourcesConn+". It must look like user:pass@tcp(127.0.0.1:3306)")
-	}
-	if strings.HasSuffix(c.SourcesConn, ")") {
-		c.Conn += "/"
-	}
+	c.Conn += "/"
 }
 
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
@@ -98,9 +92,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 		return nil
 	}
 
-	db, err = sql.Open("mysql", c.Conn)
+	db, err = sql.Open("mysql", c.Conn+c.Database)
 	l.FatalOnErr(err)
-	sourcesDb, err = sql.Open("mysql", c.SourcesConn)
+	sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
 	l.FatalOnErr(err)
 
 	for _, path := range filesOrFolders {

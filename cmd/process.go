@@ -45,8 +45,8 @@ func init() {
 }
 
 func loadProcessConfig(cmd *cobra.Command) {
-	c.FilePrefix = v.GetString("filePrefix")
 	c.BatchSize = v.GetInt("batchSize")
+	c.FilePrefix = v.GetString("filePrefix")
 }
 
 func runProcess(cmd *cobra.Command, filesOrFolders []string) {

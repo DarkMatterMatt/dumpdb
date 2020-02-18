@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"database/sql"
+	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,64 +28,69 @@ var searchCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		v.BindPFlags(cmd.Flags())
 	},
+	Args: func(cmd *cobra.Command, args []string) error {
+		databases, _ := cmd.Flags().GetStringSlice("databases")
+		if len(args) < 1 && len(databases) == 0 {
+			return errors.New("Missing database names to process")
+		}
+		return nil
+	},
 }
 
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	// Positional args: filesOrFolders: files and/or folders to import
+	// Positional args: databases: the names of databases to initialise. Also support using -d flag
+	searchCmd.Flags().StringP("conn", "c", "", "connection string to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
 	searchCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to search")
-	searchCmd.Flags().StringP("conn", "c", "", "connection string prefix to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
-	searchCmd.Flags().StringP("sourcesConn", "C", "", "connection string for the sources database. Like user:pass@tcp(127.0.0.1:3306)/sources")
+	searchCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to resolve sourceIDs to their names from")
 
 	searchCmd.Flags().StringP("query", "Q", "", "the WHERE clause of a SQL query. Yes it's injected, so try not to break your own database")
-	searchCmd.Flags().StringSlice("columns", []string{}, "columns to retrieve from the database")
+	searchCmd.Flags().StringSliceP("columns", "C", []string{}, "comma separated list of columns to retrieve")
 
-	searchCmd.MarkFlagRequired("databases")
 	searchCmd.MarkFlagRequired("conn")
 	searchCmd.MarkFlagRequired("query")
 }
 
-func loadSearchConfig(cmd *cobra.Command) {
-	c.Databases = v.GetStringSlice("databases")
-	c.SourcesConn = v.GetString("sourcesConn")
+func loadSearchConfig(cmd *cobra.Command, databases []string) {
+	c.Databases = append(v.GetStringSlice("databases"), databases...)
+	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Query = v.GetString("query")
 
 	// c.Columns = v.GetStringSlice("columns")
 	dbCols := []string{"email", "hash", "password", "sourceid", "username"}
 	if len(c.Columns) == 0 {
 		c.Columns = dbCols
-		if c.SourcesConn != "" {
+		if c.SourcesDatabase != "" {
 			c.Columns = append(c.Columns, "source")
 		}
 	} else {
 		for _, col := range v.GetStringSlice("columns") {
 			col = strings.ToLower(col)
-			if !stringinslice.StringInSlice(col, dbCols) && col != "source" {
+			if col == "source" {
+				if c.SourcesDatabase == "" {
+					showUsage(cmd, "Parameter sourcesDatabase must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
+				}
+			} else if !stringinslice.StringInSlice(col, dbCols) {
 				showUsage(cmd, "Invalid column name: "+col)
 			}
 			c.Columns = append(c.Columns, col)
 		}
-	}
-	if stringinslice.StringInSlice("source", c.Columns) && c.SourcesConn == "" {
-		showUsage(cmd, "Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
 	}
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
 		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
-	if strings.HasSuffix(c.Conn, ")") {
-		c.Conn += "/"
-	}
+	c.Conn += "/"
 }
 
-func runSearch(cmd *cobra.Command, args []string) {
-	loadSearchConfig(cmd)
+func runSearch(cmd *cobra.Command, databases []string) {
+	loadSearchConfig(cmd, databases)
 
-	if c.SourcesConn != "" {
+	if c.SourcesDatabase != "" {
 		var err error
-		sourcesDb, err = sql.Open("mysql", c.SourcesConn)
+		sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
 		l.FatalOnErr(err)
 	}
 

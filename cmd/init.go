@@ -28,7 +28,8 @@ var initCmd = &cobra.Command{
 		v.BindPFlags(cmd.Flags())
 	},
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
+		databases, _ := cmd.Flags().GetStringSlice("databases")
+		if len(args) < 1 && len(databases) == 0 {
 			return errors.New("Missing database names to process")
 		}
 		return nil
@@ -38,16 +39,18 @@ var initCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(initCmd)
 
-	// Positional args: databaseNames: the names of databases to initialise
+	// Positional args: databases: the names of databases to initialise. Also support using -d flag
+	initCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to initialise")
 	initCmd.Flags().StringP("conn", "c", "", "connection string for the MySQL. Like user:pass@tcp(127.0.0.1:3306)")
-	initCmd.Flags().StringP("sources", "s", "", "initialise the sources directory")
-	initCmd.Flags().String("engine", "Aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
+	initCmd.Flags().StringP("sourcesDatabase", "s", "", "initialise the sources database")
+	initCmd.Flags().StringP("engine", "e", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 
 	initCmd.MarkFlagRequired("conn")
 }
 
-func loadInitConfig(cmd *cobra.Command) {
-	c.Sources = v.GetString("sources")
+func loadInitConfig(cmd *cobra.Command, databases []string) {
+	c.Databases = append(v.GetStringSlice("databases"), databases...)
+	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Engine = strings.ToLower(v.GetString("engine"))
 
 	validEngines := []string{"aria", "myisam"}
@@ -59,24 +62,22 @@ func loadInitConfig(cmd *cobra.Command) {
 	if !config.ValidDSNConn(c.Conn) {
 		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
-	if strings.HasSuffix(c.Conn, ")") {
-		c.Conn += "/"
-	}
+	c.Conn += "/"
 }
 
-func runInit(cmd *cobra.Command, dbNames []string) {
-	loadInitConfig(cmd)
+func runInit(cmd *cobra.Command, databases []string) {
+	loadInitConfig(cmd, databases)
 
 	var err error
 	l.D("Using MySQL connection string: " + c.Conn)
 	db, err = sql.Open("mysql", c.Conn)
 	l.FatalOnErr(err)
 
-	if c.Sources != "" {
-		err = createDatabase(c.Sources)
+	if c.SourcesDatabase != "" {
+		err = createDatabase(c.SourcesDatabase)
 		l.FatalOnErr(err)
 
-		err = createSourcesTable(c.Sources, c.Engine)
+		err = createSourcesTable(c.SourcesDatabase, c.Engine)
 		l.FatalOnErr(err)
 	}
 
@@ -85,7 +86,7 @@ func runInit(cmd *cobra.Command, dbNames []string) {
 		"created":        time.Now().Format("2006-01-02 15:04"),
 	}
 
-	for _, dbName := range dbNames {
+	for _, dbName := range c.Databases {
 		err = createDatabase(dbName)
 		l.FatalOnErr(err)
 
@@ -173,7 +174,7 @@ func createMetadataTable(dbName, engine string) error {
 }
 
 func addMetadata(dbName string, data map[string]string) error {
-	l.D("addMetadata:" + dbName)
+	l.D("addMetadata: " + dbName)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
