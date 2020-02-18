@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
@@ -57,13 +58,27 @@ func init() {
 }
 
 func loadImportConfig(cmd *cobra.Command) {
-	c.Conn = v.GetString("conn")
-	c.SourcesConn = v.GetString("sourcesConn")
 	c.Engine = v.GetString("engine")
 	c.Compress = v.GetBool("compress")
 
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = v.GetString("filePrefix")
+
+	c.Conn = v.GetString("conn")
+	if !config.ValidDSNConn(c.Conn) {
+		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+	}
+	if strings.HasSuffix(c.Conn, ")") {
+		c.Conn += "/"
+	}
+
+	c.SourcesConn = v.GetString("sourcesConn")
+	if !config.ValidDSNConn(c.SourcesConn) {
+		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.SourcesConn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+	}
+	if strings.HasSuffix(c.SourcesConn, ")") {
+		c.Conn += "/"
+	}
 }
 
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
