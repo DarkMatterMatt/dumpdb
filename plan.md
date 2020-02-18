@@ -38,7 +38,7 @@ Process files or folders into a regularised tab-delimited text file.
 **Parameters:**
 
 - `filesOrFolders+`: One or more positional arguments of files and/or folders to import
-- `batchSize=4e6`: Number of lines per output file. 1e6 = ~32MB, 32e6 = ~1GB
+- `batchSize=4e6`: Number of lines per output file. 1e6 = ~64MB, 16e6 = ~1GB
 - `filePrefix="[currentTime]_"`: Temporary processed file prefix
 
 ### File Processing
@@ -59,7 +59,7 @@ Import files or folders into a database.
 - `sourcesDatabase=`: Database name to store sources in
 - `engine="Aria"`: The database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL
 - `compress=false`: Pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine
-- `batchSize=4e6`: Number of results per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB
+- `batchSize=4e6`: Number of results per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB
 - `filePrefix="[database]_"`: Temporary processed file prefix
 
 ## Search
