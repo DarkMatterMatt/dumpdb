@@ -9,4 +9,5 @@ type Record struct {
 	EmailRev string
 	Hash     string
 	Password string
+	Extra    string
 }
