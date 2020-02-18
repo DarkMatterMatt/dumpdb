@@ -40,12 +40,8 @@ func ShowUsage(cmd *cobra.Command, s string) {
 	os.Exit(1)
 }
 
-// DsnPattern from https://github.com/go-sql-driver/mysql/blob/f4bf8e8e0aa93d4ead0c6473503ca2f5d5eb65a8/utils.go#L34
-var DsnPattern = regexp.MustCompile(
-	`^(?:(?P<user>.*?)(?::(?P<passwd>.*))?@)?` + // [user[:password]@]
-		`(?:(?P<net>[^\(]*)(?:\((?P<addr>[^\)]*)\))?)?` + // [net[(addr)]]
-		`\/(?P<dbname>.*?)` + // /dbname
-		`(?:\?(?P<params>[^\?]*))?$`) // [?param1=value1&paramN=valueN]
+// DsnPattern matches a string beginning with `user:pass@tcp(127.0.0.1:3306)`
+var DsnPattern = regexp.MustCompile(`^\w+:\w*@tcp\([\w\.]+:\d+\)`)
 
 // ValidDSNConn checks that a string is in the format `user:pass@tcp(127.0.0.1:3306)`
 func ValidDSNConn(s string) bool {
