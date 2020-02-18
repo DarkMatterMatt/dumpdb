@@ -66,7 +66,7 @@ func loadImportConfig(cmd *cobra.Command) {
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
-		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
 	if strings.HasSuffix(c.Conn, ")") {
 		c.Conn += "/"
@@ -74,7 +74,7 @@ func loadImportConfig(cmd *cobra.Command) {
 
 	c.SourcesConn = v.GetString("sourcesConn")
 	if !config.ValidDSNConn(c.SourcesConn) {
-		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.SourcesConn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+		showUsage(cmd, "Invalid MySQL connection string "+c.SourcesConn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
 	if strings.HasSuffix(c.SourcesConn, ")") {
 		c.Conn += "/"

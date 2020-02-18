@@ -61,7 +61,7 @@ func loadSearchConfig(cmd *cobra.Command) {
 		for _, col := range v.GetStringSlice("columns") {
 			col = strings.ToLower(col)
 			if !stringinslice.StringInSlice(col, dbCols) && col != "source" {
-				config.ShowUsage(cmd, "Invalid column name: "+col)
+				showUsage(cmd, "Invalid column name: "+col)
 			}
 			c.Columns = append(c.Columns, col)
 		}
@@ -69,7 +69,7 @@ func loadSearchConfig(cmd *cobra.Command) {
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
-		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
 	if strings.HasSuffix(c.Conn, ")") {
 		c.Conn += "/"
@@ -81,7 +81,7 @@ func runSearch(cmd *cobra.Command, args []string) {
 
 	if stringinslice.StringInSlice("source", c.Columns) {
 		if c.SourcesConn == "" {
-			config.ShowUsage(cmd, "Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
+			showUsage(cmd, "Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
 		}
 		var err error
 		sourcesDb, err = sql.Open("mysql", c.SourcesConn)

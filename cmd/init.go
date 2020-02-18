@@ -52,12 +52,12 @@ func loadInitConfig(cmd *cobra.Command) {
 
 	validEngines := []string{"aria", "myisam"}
 	if !stringinslice.StringInSlice(c.Engine, validEngines) {
-		config.ShowUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
+		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
 	}
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
-		config.ShowUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
+		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
 	}
 	if strings.HasSuffix(c.Conn, ")") {
 		c.Conn += "/"
