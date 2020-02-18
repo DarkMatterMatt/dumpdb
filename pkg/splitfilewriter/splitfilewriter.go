@@ -145,13 +145,15 @@ func (s *SplitFileWriter) preWrite() error {
 			return err
 		}
 
-		s.CurrentInc++
-		n, err := New(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.CurrentBuf.Size(), s.NewFileCallback)
-		if err != nil {
-			return err
+		if s.NewFileCallback != nil {
+			err = s.NewFileCallback(s)
+			if err != nil {
+				return err
+			}
 		}
 
-		err = s.NewFileCallback(s)
+		s.CurrentInc++
+		n, err := New(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.CurrentBuf.Size(), s.NewFileCallback)
 		if err != nil {
 			return err
 		}
