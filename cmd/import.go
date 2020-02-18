@@ -51,7 +51,7 @@ func init() {
 	importCmd.Flags().StringP("engine", "e", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 	importCmd.Flags().Bool("compress", false, "pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine")
 
-	importCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
+	importCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
 	importCmd.Flags().StringP("filePrefix", "o", "[database]_", "temporary processed file prefix")
 
 	importCmd.MarkFlagRequired("conn")
@@ -79,11 +79,11 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	loadImportConfig(cmd)
 
 	var err error
-	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"_tmp_", ".csv", c.BatchSize)
 	l.FatalOnErr(err)

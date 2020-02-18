@@ -40,7 +40,7 @@ func init() {
 	rootCmd.AddCommand(processCmd)
 
 	// Positional args: filesOrFolders: files and/or folders to import
-	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~32MB, 32e6 = ~1GB")
+	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
 	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
 }
 
@@ -53,11 +53,11 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	loadProcessConfig(cmd)
 
 	var err error
-	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0)
+	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"_output_", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
@@ -96,7 +96,7 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 			continue
 		}
 
-		parsedArray := []string{r.Source, r.Username, r.Email, r.Hash, r.Password}
+		parsedArray := []string{r.Source, r.Username, r.Email, r.Hash, r.Password, r.Extra}
 		parsedStr := strings.Join(parsedArray, "\t")
 
 		// write string to output file
