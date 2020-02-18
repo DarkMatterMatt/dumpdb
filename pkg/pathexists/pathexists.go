@@ -28,7 +28,11 @@ func AssertPathsAllExist(paths []string) error {
 
 // IsFile checks that a path is a file
 func IsFile(path string) bool {
-	return !IsDir(path)
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !fileInfo.IsDir()
 }
 
 // AssertPathIsFile validates that the path is a file
