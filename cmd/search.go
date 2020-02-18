@@ -66,6 +66,9 @@ func loadSearchConfig(cmd *cobra.Command) {
 			c.Columns = append(c.Columns, col)
 		}
 	}
+	if stringinslice.StringInSlice("source", c.Columns) && c.SourcesConn == "" {
+		showUsage(cmd, "Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
+	}
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
@@ -79,10 +82,7 @@ func loadSearchConfig(cmd *cobra.Command) {
 func runSearch(cmd *cobra.Command, args []string) {
 	loadSearchConfig(cmd)
 
-	if stringinslice.StringInSlice("source", c.Columns) {
-		if c.SourcesConn == "" {
-			showUsage(cmd, "Parameter sourcesConn must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
-		}
+	if c.SourcesConn != "" {
 		var err error
 		sourcesDb, err = sql.Open("mysql", c.SourcesConn)
 		l.FatalOnErr(err)
