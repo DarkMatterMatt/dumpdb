@@ -30,7 +30,7 @@ type SplitFileWriter struct {
 
 // Create calls os.Create and then creates a new SplitFileWriter from it
 func Create(namePrefix, nameSuffix string, maxWrites int) (*SplitFileWriter, error) {
-	s, err := New(namePrefix, nameSuffix, 0, maxWrites, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666, defaultBufSize, nil)
+	s, err := New(namePrefix, nameSuffix, 0, maxWrites, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666, defaultBufSize, nil)
 	if err != nil {
 		return nil, err
 	}
