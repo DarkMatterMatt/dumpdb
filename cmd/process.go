@@ -65,7 +65,7 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"output", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
-	outputFile.NewFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
+	outputFile.FullFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
 		l.D("Beginning to write to " + s.NextFileName())
 		return nil
 	}

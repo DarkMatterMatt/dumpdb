@@ -25,7 +25,7 @@ type SplitFileWriter struct {
 	WriteCount int
 	CurrentInc int
 
-	NewFileCallback func(*SplitFileWriter) error
+	FullFileCallback func(*SplitFileWriter) error
 }
 
 // Create calls os.Create and then creates a new SplitFileWriter from it
@@ -56,15 +56,15 @@ func New(namePrefix, nameSuffix string, currentInc, maxWrites, fileFlag int, fil
 
 	w := bufio.NewWriterSize(f, bufSize)
 	return &SplitFileWriter{
-		NamePrefix:      namePrefix,
-		NameSuffix:      nameSuffix,
-		MaxWrites:       maxWrites,
-		FileFlag:        fileFlag,
-		FilePerm:        filePerm,
-		CurrentFile:     f,
-		CurrentBuf:      w,
-		CurrentInc:      currentInc,
-		NewFileCallback: newFileCallback,
+		NamePrefix:       namePrefix,
+		NameSuffix:       nameSuffix,
+		MaxWrites:        maxWrites,
+		FileFlag:         fileFlag,
+		FilePerm:         filePerm,
+		CurrentFile:      f,
+		CurrentBuf:       w,
+		CurrentInc:       currentInc,
+		FullFileCallback: newFileCallback,
 	}, nil
 }
 
@@ -145,15 +145,15 @@ func (s *SplitFileWriter) preWrite() error {
 			return err
 		}
 
-		if s.NewFileCallback != nil {
-			err = s.NewFileCallback(s)
+		if s.FullFileCallback != nil {
+			err = s.FullFileCallback(s)
 			if err != nil {
 				return err
 			}
 		}
 
 		s.CurrentInc++
-		n, err := New(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.CurrentBuf.Size(), s.NewFileCallback)
+		n, err := New(s.NamePrefix, s.NameSuffix, s.CurrentInc, s.MaxWrites, s.FileFlag, s.FilePerm, s.CurrentBuf.Size(), s.FullFileCallback)
 		if err != nil {
 			return err
 		}
@@ -174,5 +174,5 @@ func (s *SplitFileWriter) copyToSelf(n *SplitFileWriter) {
 	s.CurrentBuf = n.CurrentBuf
 	s.WriteCount = n.WriteCount
 	s.CurrentInc = n.CurrentInc
-	s.NewFileCallback = n.NewFileCallback
+	s.FullFileCallback = n.FullFileCallback
 }
