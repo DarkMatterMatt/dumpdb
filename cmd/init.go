@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const schemaVersion = "0.0.2"
+const schemaVersion = "0.0.3"
 
 // the `init` command
 var initCmd = &cobra.Command{
@@ -121,7 +121,7 @@ func createMainTable(dbName, engine string) error {
 			id              INT UNSIGNED        AUTO_INCREMENT,
 			hash            VARCHAR(256),
 			password        VARCHAR(128),
-			source          INT UNSIGNED,
+			sourceid        INT UNSIGNED,
 			email           VARCHAR(320)        GENERATED ALWAYS AS (REVERSE(email_rev)) VIRTUAL,
 			email_rev       VARCHAR(320),       /* max length 320 https://stackoverflow.com/a/574698/6595777 */
 			username        VARCHAR(128),
