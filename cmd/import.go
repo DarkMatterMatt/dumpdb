@@ -120,7 +120,7 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	for _, path := range filesOrFolders {
 		err := linescanner.LineScanner(path, processTextFileScanner)
 		if err == errSignalInterrupt {
-			break
+			return
 		}
 		l.FatalOnErr(err)
 	}

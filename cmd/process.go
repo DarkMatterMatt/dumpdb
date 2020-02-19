@@ -42,7 +42,7 @@ func init() {
 	// Positional args: filesOrFolders: files and/or folders to import
 	processCmd.Flags().StringP("parser", "p", "", "the custom line parser to use. Modify the internal/parseline package to add another line parser")
 	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
-	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
+	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05 "), "processed file prefix")
 
 	importCmd.MarkFlagRequired("parser")
 }
@@ -77,7 +77,7 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	for _, path := range filesOrFolders {
 		err := linescanner.LineScanner(path, processTextFileScanner)
 		if err == errSignalInterrupt {
-			break
+			return
 		}
 		l.FatalOnErr(err)
 	}
