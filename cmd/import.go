@@ -81,6 +81,9 @@ func loadImportConfig(cmd *cobra.Command) {
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	loadImportConfig(cmd)
 
+	var importDone chan bool
+	importDone <- true
+
 	var err error
 	errFile, err = os.OpenFile(c.FilePrefix+"err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
@@ -90,8 +93,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"tmp", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
-	outputFile.NewFileCallback = func(*splitfilewriter.SplitFileWriter) error {
-		// import to mysql
+	outputFile.FullFileCallback = func(*splitfilewriter.SplitFileWriter) error {
+		waitForImport(importDone)
+		go importToDatabase(outputFile.CurrentFileName(), importDone)
 		return nil
 	}
 
@@ -100,12 +104,22 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
 	l.FatalOnErr(err)
 
+	dataDir := getDataDir()
+	disableDatabaseIndexes(dataDir)
+
 	for _, path := range filesOrFolders {
 		err := linescanner.LineScanner(path, processTextFileScanner)
 		l.FatalOnErr(err)
 	}
 
 	// final import to mysql
+	waitForImport(importDone)
+	importToDatabase(outputFile.CurrentFileName(), importDone)
+
+	// TODO: customisable tmpDir
+	tmpDir := os.TempDir()
+	compressDatabase(dataDir, tmpDir)
+	restoreDatabaseIndexes(dataDir, tmpDir)
 }
 
 func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
