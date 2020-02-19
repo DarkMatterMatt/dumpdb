@@ -29,7 +29,8 @@ var initCmd = &cobra.Command{
 	},
 	Args: func(cmd *cobra.Command, args []string) error {
 		databases, _ := cmd.Flags().GetStringSlice("databases")
-		if len(args) < 1 && len(databases) == 0 {
+		sourcesDatabase, _ := cmd.Flags().GetString("sourcesDatabase")
+		if len(args) < 1 && len(databases) == 0 && sourcesDatabase == "" {
 			return errors.New("Missing database names to process")
 		}
 		return nil
