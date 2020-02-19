@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"database/sql"
+	"errors"
 	"os"
 	"os/signal"
 
@@ -26,6 +27,8 @@ const (
 	sourcesTable  = "sources"
 	metadataTable = "metadata"
 )
+
+var errSignalInterrupt = errors.New("Signal Interrupt")
 
 var v = viper.NewWithOptions(viper.EnvKeyReplacer(camelcase2underscore.NewCamelcase2UnderscoreReplacer()))
 

@@ -72,6 +72,9 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 
 	for _, path := range filesOrFolders {
 		err := linescanner.LineScanner(path, processTextFileScanner)
+		if err == errSignalInterrupt {
+			break
+		}
 		l.FatalOnErr(err)
 	}
 }
@@ -89,7 +92,7 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 	for lineScanner.Scan() {
 		// CTRL+C means stop
 		if signalInterrupt {
-			return errors.New("Signal Interrupt")
+			return errSignalInterrupt
 		}
 
 		line := lineScanner.Text()
