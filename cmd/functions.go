@@ -8,8 +8,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
+	"github.com/pbnjay/memory"
 	"github.com/spf13/cobra"
 )
 
@@ -29,21 +31,51 @@ func getDataDir() (dataDir string) {
 
 func disableDatabaseIndexes(dataDir string) {
 	l.V("Disabling database indexes")
-	out, err := exec.Command("aria_chk", "-rq", "--keys-used", "0", dataDir+c.Database+"/"+mainTable).CombinedOutput()
+
+	packCmd := "aria_chk"
+	if c.Engine == "myisam" {
+		packCmd = "myisamchk"
+	}
+
+	out, err := exec.Command(packCmd, "-rq", "--keys-used", "0", dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(string(out))
 	l.FatalOnErr(err)
 }
 
 func restoreDatabaseIndexes(dataDir, tmpDir string) {
 	l.V("Indexing database")
-	out, err := exec.Command("aria_pack", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
+
+	mem := memory.TotalMemory()
+	if mem != 0 {
+		// TODO: Add configurable percentage
+		l.V("Detected RAM: " + strconv.FormatUint(mem/1024/1024/1000, 10) + "GB. Using 25% as the sort buffer.")
+		mem /= 4
+	} else {
+		l.V("Failed to detect the amount system RAM. Using 512MB as the sort buffer.")
+		mem = 512 * 1024 * 1024
+	}
+
+	packCmd := "aria_chk"
+	bufferParam := "--aria_sort_buffer_size"
+	if c.Engine == "myisam" {
+		packCmd = "myisamchk"
+		bufferParam = "--myisam_sort_buffer_size"
+	}
+
+	out, err := exec.Command(packCmd, bufferParam, strconv.FormatUint(mem, 10), "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(string(out))
 	l.FatalOnErr(err)
 }
 
 func compressDatabase(dataDir, tmpDir string) {
 	l.V("Compressing database")
-	out, err := exec.Command("aria_chk", "-rq", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
+
+	packCmd := "aria_pack"
+	if c.Engine == "myisam" {
+		packCmd = "myisampack"
+	}
+
+	out, err := exec.Command(packCmd, "-rq", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(string(out))
 	l.FatalOnErr(err)
 }

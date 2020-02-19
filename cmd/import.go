@@ -21,6 +21,7 @@ import (
 	"github.com/darkmattermatt/dumpdb/pkg/reverse"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
+	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +50,7 @@ func init() {
 	importCmd.Flags().StringP("conn", "c", "", "connection string for the SQL database. Like user:pass@tcp(127.0.0.1:3306)")
 	importCmd.Flags().StringP("database", "d", "", "database name to import into")
 	importCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to store sources in")
-	importCmd.Flags().StringP("engine", "e", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
+	importCmd.Flags().String("engine", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 	importCmd.Flags().Bool("compress", false, "pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine")
 
 	importCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
@@ -65,11 +66,16 @@ func loadImportConfig(cmd *cobra.Command) {
 	c.LineParser = v.GetString("parser")
 	c.Database = v.GetString("database")
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Engine = v.GetString("engine")
 	c.Compress = v.GetBool("compress")
 
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = strings.ReplaceAll(v.GetString("filePrefix"), "[database]", c.Database)
+
+	c.Engine = strings.ToLower(v.GetString("engine"))
+	validEngines := []string{"aria", "myisam"}
+	if !stringinslice.StringInSlice(c.Engine, validEngines) {
+		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
+	}
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
@@ -118,7 +124,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 
 	// TODO: customisable tmpDir
 	tmpDir := os.TempDir()
-	compressDatabase(dataDir, tmpDir)
+	if c.Compress {
+		compressDatabase(dataDir, tmpDir)
+	}
 	restoreDatabaseIndexes(dataDir, tmpDir)
 }
 
