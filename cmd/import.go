@@ -63,7 +63,6 @@ func init() {
 }
 
 func loadImportConfig(cmd *cobra.Command) {
-	c.LineParser = v.GetString("parser")
 	c.Database = v.GetString("database")
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Compress = v.GetBool("compress")
@@ -71,10 +70,15 @@ func loadImportConfig(cmd *cobra.Command) {
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = strings.ReplaceAll(v.GetString("filePrefix"), "[database]", c.Database)
 
+	c.LineParser = v.GetString("parser")
+	if !parseline.ParserExists(c.LineParser) {
+		showUsage(cmd, "Error: unknown line parser: "+c.LineParser+". Have you made a new parser for your dump in the internal/parseline package?")
+	}
+
 	c.Engine = strings.ToLower(v.GetString("engine"))
 	validEngines := []string{"aria", "myisam"}
 	if !stringinslice.StringInSlice(c.Engine, validEngines) {
-		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
+		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", "))
 	}
 
 	c.Conn = v.GetString("conn")

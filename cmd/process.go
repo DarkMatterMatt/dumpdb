@@ -48,9 +48,13 @@ func init() {
 }
 
 func loadProcessConfig(cmd *cobra.Command) {
-	c.LineParser = v.GetString("parser")
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = v.GetString("filePrefix")
+
+	c.LineParser = v.GetString("parser")
+	if !parseline.ParserExists(c.LineParser) {
+		showUsage(cmd, "Error: unknown line parser: "+c.LineParser+". Have you made a new parser for your dump in the internal/parseline package?")
+	}
 }
 
 func runProcess(cmd *cobra.Command, filesOrFolders []string) {
