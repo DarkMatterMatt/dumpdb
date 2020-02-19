@@ -21,6 +21,7 @@ import (
 	"github.com/darkmattermatt/dumpdb/pkg/reverse"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
+	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
@@ -65,11 +66,16 @@ func loadImportConfig(cmd *cobra.Command) {
 	c.LineParser = v.GetString("parser")
 	c.Database = v.GetString("database")
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Engine = v.GetString("engine")
 	c.Compress = v.GetBool("compress")
 
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = strings.ReplaceAll(v.GetString("filePrefix"), "[database]", c.Database)
+
+	c.Engine = strings.ToLower(v.GetString("engine"))
+	validEngines := []string{"aria", "myisam"}
+	if !stringinslice.StringInSlice(c.Engine, validEngines) {
+		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
+	}
 
 	c.Conn = v.GetString("conn")
 	if !config.ValidDSNConn(c.Conn) {
