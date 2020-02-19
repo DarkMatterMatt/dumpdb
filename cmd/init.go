@@ -44,7 +44,7 @@ func init() {
 	initCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to initialise")
 	initCmd.Flags().StringP("conn", "c", "", "connection string for the MySQL. Like user:pass@tcp(127.0.0.1:3306)")
 	initCmd.Flags().StringP("sourcesDatabase", "s", "", "initialise the sources database")
-	initCmd.Flags().StringP("engine", "e", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
+	initCmd.Flags().String("engine", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 
 	initCmd.MarkFlagRequired("conn")
 }
