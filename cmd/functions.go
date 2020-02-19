@@ -7,8 +7,10 @@ package cmd
 import (
 	"os"
 	"os/exec"
+	"strconv"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
+	"github.com/pbnjay/memory"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +37,17 @@ func disableDatabaseIndexes(dataDir string) {
 
 func restoreDatabaseIndexes(dataDir, tmpDir string) {
 	l.V("Indexing database")
-	out, err := exec.Command("aria_pack", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
+
+	mem := memory.TotalMemory()
+	if mem != 0 {
+		l.V("Detected RAM: " + strconv.FormatUint(mem/1024/1024/1000, 10) + "GB. Using 25% as the sort buffer.")
+		mem /= 4
+	} else {
+		l.V("Failed to detect the amount system RAM. Using 512MB as the sort buffer.")
+		mem = 512 * 1024 * 1024
+	}
+
+	out, err := exec.Command("aria_pack", "--aria_sort_buffer_size", strconv.FormatUint(mem, 10), "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.FatalOnErr(err)
 	l.D(out)
 }
