@@ -7,6 +7,7 @@ package cmd
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/spf13/cobra"
@@ -30,26 +31,29 @@ func disableDatabaseIndexes(dataDir string) {
 	l.V("Disabling database indexes")
 	out, err := exec.Command("aria_chk", "-rq", "--keys-used", "0", dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.FatalOnErr(err)
-	l.D(out)
+	l.D(string(out))
 }
 
 func restoreDatabaseIndexes(dataDir, tmpDir string) {
 	l.V("Indexing database")
 	out, err := exec.Command("aria_pack", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.FatalOnErr(err)
-	l.D(out)
+	l.D(string(out))
 }
 
 func compressDatabase(dataDir, tmpDir string) {
 	l.V("Compressing database")
 	out, err := exec.Command("aria_chk", "-rq", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.FatalOnErr(err)
-	l.D(out)
+	l.D(string(out))
 }
 
 func importToDatabase(filename string, mysqlDone chan bool) {
-	l.I("Importing " + filename + "to the database")
-	_, err := db.Exec(`
+	filename, err := filepath.Abs(filename)
+	l.FatalOnErr(err)
+
+	l.I("Importing " + filename + " to the database")
+	_, err = db.Exec(`
 		LOAD DATA INFILE '` + filename + `'
 		IGNORE INTO TABLE ` + mainTable + `
 		FIELDS TERMINATED BY '\t' ESCAPED BY ''
