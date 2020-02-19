@@ -118,7 +118,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 
 	// TODO: customisable tmpDir
 	tmpDir := os.TempDir()
-	compressDatabase(dataDir, tmpDir)
+	if c.Compress {
+		compressDatabase(dataDir, tmpDir)
+	}
 	restoreDatabaseIndexes(dataDir, tmpDir)
 }
 
