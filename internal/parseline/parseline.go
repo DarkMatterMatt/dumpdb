@@ -1,43 +1,17 @@
 package parseline
 
-import (
-	"errors"
-	"strings"
-)
+import "errors"
 
-// ParseLine parses a single line and returns a Record
-// Modify this function to match your data
-func ParseLine(line, source string) (Record, error) {
-	result := Record{}
+// ErrInvalidLineParser occurs when a line parser that does not exists is requested
+var ErrInvalidLineParser = errors.New("The requested line parser does not exist")
 
-	// try splitting by ;
-	r := strings.SplitN(line, ";", 2)
+var lineParsers = make(map[string]func(line, source string) (Record, error))
 
-	// if that doesn't work, try splitting by :
-	if len(r) == 1 {
-		r = strings.SplitN(line, ":", 2)
+// ParseLine parses a single line with the requested line parser
+func ParseLine(name, line, source string) (Record, error) {
+	parser, ok := lineParsers[name]
+	if ok {
+		return parser(line, source)
 	}
-
-	// if that doesn't work, try splitting by tabs
-	if len(r) == 1 {
-		r = strings.SplitN(line, "\t", 2)
-	}
-
-	// if that also failed, return an error
-	if len(r) == 1 {
-		return result, errors.New("Incorrect number of columns")
-	}
-
-	// check for presence of an @ symbol in the email address
-	if !strings.Contains(r[0], "@") {
-		return result, errors.New("Email address is missing")
-	}
-
-	// first field is email, second field is password
-	// set either emailRev or email
-	result.Email = r[0]
-	// result.EmailRev = reverse(r[0])
-	result.Password = r[1]
-	result.Source = source
-	return result, nil
+	return Record{}, ErrInvalidLineParser
 }

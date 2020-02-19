@@ -38,6 +38,7 @@ Process files or folders into a regularised tab-delimited text file.
 **Parameters:**
 
 - `filesOrFolders+`: One or more positional arguments of files and/or folders to import
+- `parser=`: The custom line parser to use. Modify the internal/parseline package to add another line parser
 - `batchSize=4e6`: Number of lines per output file. 1e6 = ~64MB, 16e6 = ~1GB
 - `filePrefix="[currentTime]_"`: Temporary processed file prefix
 
@@ -54,6 +55,7 @@ Import files or folders into a database.
 **Parameters:**
 
 - `filesOrFolders+`: One or more positional arguments of files and/or folders to import
+- `parser=`: The custom line parser to use. Modify the internal/parseline package to add another line parser
 - `conn=`: Connection string for the SQL database. Like `user:pass@tcp(127.0.0.1:3306)`
 - `database=`: Database name to import into
 - `sourcesDatabase=`: Database name to store sources in

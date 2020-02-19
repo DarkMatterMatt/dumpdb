@@ -45,6 +45,7 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 
 	// Positional args: filesOrFolders: files and/or folders to import
+	importCmd.Flags().StringP("parser", "p", "", "the custom line parser to use. Modify the internal/parseline package to add another line parser")
 	importCmd.Flags().StringP("conn", "c", "", "connection string for the SQL database. Like user:pass@tcp(127.0.0.1:3306)")
 	importCmd.Flags().StringP("database", "d", "", "database name to import into")
 	importCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to store sources in")
@@ -54,12 +55,14 @@ func init() {
 	importCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
 	importCmd.Flags().StringP("filePrefix", "o", "[database]_", "temporary processed file prefix")
 
+	importCmd.MarkFlagRequired("parser")
 	importCmd.MarkFlagRequired("conn")
 	importCmd.MarkFlagRequired("database")
 	importCmd.MarkFlagRequired("sourcesDatabase")
 }
 
 func loadImportConfig(cmd *cobra.Command) {
+	c.LineParser = v.GetString("parser")
 	c.Database = v.GetString("database")
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Engine = v.GetString("engine")
@@ -98,7 +101,8 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 
 	for _, path := range filesOrFolders {
-		linescanner.LineScanner(path, importTextFileScanner)
+		err := linescanner.LineScanner(path, processTextFileScanner)
+		l.FatalOnErr(err)
 	}
 
 	// final import to mysql
@@ -127,8 +131,11 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		}
 
 		// parse & reformat line
-		r, err := parseline.ParseLine(line, path)
+		r, err := parseline.ParseLine(c.LineParser, line, path)
 		if err != nil {
+			if err == parseline.ErrInvalidLineParser {
+				return errors.New(err.Error() + ": " + c.LineParser)
+			}
 			errFile.WriteString(line + "\n")
 			continue
 		}

@@ -40,11 +40,15 @@ func init() {
 	rootCmd.AddCommand(processCmd)
 
 	// Positional args: filesOrFolders: files and/or folders to import
+	processCmd.Flags().StringP("parser", "p", "", "the custom line parser to use. Modify the internal/parseline package to add another line parser")
 	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
 	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05"), "processed file prefix")
+
+	importCmd.MarkFlagRequired("parser")
 }
 
 func loadProcessConfig(cmd *cobra.Command) {
+	c.LineParser = v.GetString("parser")
 	c.BatchSize = v.GetInt("batchSize")
 	c.FilePrefix = v.GetString("filePrefix")
 }
@@ -61,9 +65,14 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"_output_", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
+	outputFile.NewFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
+		l.D("Beginning to write to " + s.NextFileName())
+		return nil
+	}
 
 	for _, path := range filesOrFolders {
-		linescanner.LineScanner(path, processTextFileScanner)
+		err := linescanner.LineScanner(path, processTextFileScanner)
+		l.FatalOnErr(err)
 	}
 }
 
@@ -90,8 +99,11 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		}
 
 		// parse & reformat line
-		r, err := parseline.ParseLine(line, path)
+		r, err := parseline.ParseLine(c.LineParser, line, path)
 		if err != nil {
+			if err == parseline.ErrInvalidLineParser {
+				return errors.New(err.Error() + ": " + c.LineParser)
+			}
 			errFile.WriteString(line + "\n")
 			continue
 		}

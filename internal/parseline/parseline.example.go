@@ -6,13 +6,23 @@ import (
 )
 
 func init() {
-	lineParsers["example_split_simple"] = func(line, source string) (Record, error) {
+	lineParsers["example"] = func(line, source string) (Record, error) {
 		result := Record{}
 
-		// try splitting by :
-		r := strings.SplitN(line, ":", 2)
+		// try splitting by ;
+		r := strings.SplitN(line, ";", 2)
 
-		// if it failed, return an error
+		// if that doesn't work, try splitting by :
+		if len(r) == 1 {
+			r = strings.SplitN(line, ":", 2)
+		}
+
+		// if that doesn't work, try splitting by tabs
+		if len(r) == 1 {
+			r = strings.SplitN(line, "\t", 2)
+		}
+
+		// if that also failed, return an error
 		if len(r) == 1 {
 			return result, errors.New("Incorrect number of columns")
 		}
@@ -23,7 +33,9 @@ func init() {
 		}
 
 		// first field is email, second field is password
+		// set either emailRev or email
 		result.Email = r[0]
+		// result.EmailRev = reverse(r[0])
 		result.Password = r[1]
 		result.Source = source
 		return result, nil
