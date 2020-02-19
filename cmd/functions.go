@@ -56,7 +56,7 @@ func restoreDatabaseIndexes(dataDir, tmpDir string) {
 	}
 
 	packCmd := "aria_chk"
-	bufferParam := "--aria_sort_buffer_size"
+	bufferParam := "--sort_buffer_size"
 	if c.Engine == "myisam" {
 		packCmd = "myisamchk"
 		bufferParam = "--myisam_sort_buffer_size"
