@@ -58,7 +58,7 @@ func loadSearchConfig(cmd *cobra.Command, databases []string) {
 	c.Query = v.GetString("query")
 
 	// c.Columns = v.GetStringSlice("columns")
-	dbCols := []string{"email", "hash", "password", "sourceid", "username"}
+	dbCols := []string{"email", "hash", "password", "sourceid", "username", "extra"}
 	if len(c.Columns) == 0 {
 		c.Columns = dbCols
 		if c.SourcesDatabase != "" {
@@ -130,7 +130,7 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 	}
 	defer db.Close()
 
-	q := "SELECT email, hash, password, sourceid, username FROM main WHERE " + c.Query
+	q := "SELECT email, hash, password, sourceid, username, extra FROM main WHERE " + c.Query
 	l.D("queryDatabase", dbName, q)
 
 	rows, err := db.Query(q)
@@ -146,10 +146,11 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 		password string
 		sourceID int64
 		username string
+		extra    string
 	)
 
 	for rows.Next() {
-		err := rows.Scan(&email, &hash, &password, &sourceID, &username)
+		err := rows.Scan(&email, &hash, &password, &sourceID, &username, &extra)
 		if err != nil {
 			l.W(err)
 			return
@@ -175,6 +176,8 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 				arr = append(arr, strconv.FormatInt(sourceID, 10))
 			case "username":
 				arr = append(arr, username)
+			case "extra":
+				arr = append(arr, extra)
 			}
 		}
 		// print result to stdout
