@@ -146,7 +146,7 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
 		l.FatalOnErr((err))
 
-		arr := []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password}
+		arr := []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password, r.Extra}
 
 		// write string to output file
 		_, err = outputFile.WriteString(strings.Join(arr, "\t") + "\n")
