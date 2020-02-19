@@ -30,22 +30,22 @@ func getDataDir() (dataDir string) {
 func disableDatabaseIndexes(dataDir string) {
 	l.V("Disabling database indexes")
 	out, err := exec.Command("aria_chk", "-rq", "--keys-used", "0", dataDir+c.Database+"/"+mainTable).CombinedOutput()
-	l.FatalOnErr(err)
 	l.D(string(out))
+	l.FatalOnErr(err)
 }
 
 func restoreDatabaseIndexes(dataDir, tmpDir string) {
 	l.V("Indexing database")
 	out, err := exec.Command("aria_pack", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
-	l.FatalOnErr(err)
 	l.D(string(out))
+	l.FatalOnErr(err)
 }
 
 func compressDatabase(dataDir, tmpDir string) {
 	l.V("Compressing database")
 	out, err := exec.Command("aria_chk", "-rq", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
-	l.FatalOnErr(err)
 	l.D(string(out))
+	l.FatalOnErr(err)
 }
 
 func importToDatabase(filename string, mysqlDone chan bool) {
