@@ -103,7 +103,7 @@ func runInit(cmd *cobra.Command, databases []string) {
 }
 
 func createDatabase(dbName string) error {
-	l.D("createDatabase: " + dbName)
+	l.I("createDatabase: " + dbName)
 	_, err := db.Exec(`
 		CREATE DATABASE ` + dbName + `
 	`)
@@ -111,7 +111,7 @@ func createDatabase(dbName string) error {
 }
 
 func createMainTable(dbName, engine string) error {
-	l.D("createMainTable: " + dbName + "/" + mainTable)
+	l.I("createMainTable: " + dbName + "/" + mainTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func createMainTable(dbName, engine string) error {
 }
 
 func createSourcesTable(dbName, engine string) error {
-	l.D("createSourcesTable: " + dbName + "/" + sourcesTable)
+	l.I("createSourcesTable: " + dbName + "/" + sourcesTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func createSourcesTable(dbName, engine string) error {
 }
 
 func createMetadataTable(dbName, engine string) error {
-	l.D("createMetadataTable: " + dbName + "/" + metadataTable)
+	l.I("createMetadataTable: " + dbName + "/" + metadataTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
@@ -175,7 +175,7 @@ func createMetadataTable(dbName, engine string) error {
 }
 
 func addMetadata(dbName string, data map[string]string) error {
-	l.D("addMetadata: " + dbName)
+	l.V("addMetadata: " + dbName)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
 		return err
