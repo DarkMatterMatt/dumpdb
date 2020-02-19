@@ -22,11 +22,11 @@ type Config struct {
 
 	// import
 	FilesOrFolders string
-	LineParser string
+	LineParser     string
 	Database       string
 	Compress       bool
 	BatchSize      int
-	FilePrefix                         string
+	FilePrefix         string
 }
 
 // DsnPattern matches a string in the format `user:pass@tcp(127.0.0.1:3306)`
