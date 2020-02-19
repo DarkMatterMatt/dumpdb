@@ -64,7 +64,7 @@ func SourceID(s string, sourcesDb *sql.DB, sourcesTable string) (int64, error) {
 
 	// upsert from database
 	res, err := sourcesDb.Exec(`
-		INSERT INTO `+sourcesTable+` (name, date_added) VALUES(?, UNIX_TIMESTAMP())
+		INSERT INTO `+sourcesTable+` (name) VALUES (?)
 		ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)
 	`, s)
 	if err != nil {
