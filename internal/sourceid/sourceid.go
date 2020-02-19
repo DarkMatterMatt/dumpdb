@@ -31,10 +31,10 @@ func SourceName(id int64, sourcesDb *sql.DB, sourcesTable string) (string, error
 		WHERE id=?
 	`, id).Scan(&s)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			s = "CouldNotFindSource"
+		if err != sql.ErrNoRows {
+			return "", err
 		}
-		return "", err
+		s = "CouldNotFindSource"
 	}
 
 	// save in cache
