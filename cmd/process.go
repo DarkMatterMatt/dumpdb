@@ -57,13 +57,13 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	loadProcessConfig(cmd)
 
 	var err error
-	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
+	errFile, err = os.OpenFile(c.FilePrefix+"err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
+	doneFile, err = os.OpenFile(c.FilePrefix+"done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
+	skipFile, err = os.OpenFile(c.FilePrefix+"skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	outputFile, err = splitfilewriter.Create(c.FilePrefix+"_output_", ".csv", c.BatchSize)
+	outputFile, err = splitfilewriter.Create(c.FilePrefix+"output", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
 	outputFile.NewFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
 		l.D("Beginning to write to " + s.NextFileName())

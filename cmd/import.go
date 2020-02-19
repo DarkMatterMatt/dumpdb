@@ -82,13 +82,13 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	loadImportConfig(cmd)
 
 	var err error
-	errFile, err = os.OpenFile(c.FilePrefix+"_err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
+	errFile, err = os.OpenFile(c.FilePrefix+"err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	doneFile, err = os.OpenFile(c.FilePrefix+"_done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
+	doneFile, err = os.OpenFile(c.FilePrefix+"done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	skipFile, err = os.OpenFile(c.FilePrefix+"_skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
+	skipFile, err = os.OpenFile(c.FilePrefix+"skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
 	l.FatalOnErr(err)
-	outputFile, err = splitfilewriter.Create(c.FilePrefix+"_tmp_", ".csv", c.BatchSize)
+	outputFile, err = splitfilewriter.Create(c.FilePrefix+"tmp", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
 	outputFile.NewFileCallback = func(*splitfilewriter.SplitFileWriter) error {
 		// import to mysql
