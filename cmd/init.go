@@ -52,8 +52,8 @@ func init() {
 func loadInitConfig(cmd *cobra.Command, databases []string) {
 	c.Databases = append(v.GetStringSlice("databases"), databases...)
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Engine = strings.ToLower(v.GetString("engine"))
 
+	c.Engine = strings.ToLower(v.GetString("engine"))
 	validEngines := []string{"aria", "myisam"}
 	if !stringinslice.StringInSlice(c.Engine, validEngines) {
 		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
