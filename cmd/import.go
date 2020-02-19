@@ -81,7 +81,7 @@ func loadImportConfig(cmd *cobra.Command) {
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	loadImportConfig(cmd)
 
-	var importDone chan bool
+	importDone := make(chan bool, 1)
 	importDone <- true
 
 	var err error
@@ -93,9 +93,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"tmp", ".csv", c.BatchSize)
 	l.FatalOnErr(err)
-	outputFile.FullFileCallback = func(*splitfilewriter.SplitFileWriter) error {
+	outputFile.FullFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
 		waitForImport(importDone)
-		go importToDatabase(outputFile.CurrentFileName(), importDone)
+		go importToDatabase(s.CurrentFileName(), importDone)
 		return nil
 	}
 
