@@ -108,9 +108,6 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		// parse & reformat line
 		r, err := parseline.ParseLine(c.LineParser, line, path)
 		if err != nil {
-			if err == parseline.ErrInvalidLineParser {
-				return errors.New(err.Error() + ": " + c.LineParser)
-			}
 			errFile.WriteString(line + "\n")
 			continue
 		}
