@@ -37,6 +37,21 @@ func formatCommandOutput(s string) string {
 	return s
 }
 
+func queryDatabaseEngine() string {
+	l.I("Querying database engine type")
+
+	var engine string
+	err := db.QueryRow(`
+		SELECT engine
+		FROM information_schema.tables
+		WHERE table_name='` + mainTable + `' AND table_schema='` + c.Database + `'
+	`).Scan(&engine)
+	l.FatalOnErr(err)
+
+	l.V("Found database engine: " + engine)
+	return strings.ToLower(engine)
+}
+
 func disableDatabaseIndexes(dataDir string) {
 	l.V("Disabling database indexes")
 
