@@ -50,7 +50,6 @@ func init() {
 	importCmd.Flags().StringP("conn", "c", "", "connection string for the SQL database. Like user:pass@tcp(127.0.0.1:3306)")
 	importCmd.Flags().StringP("database", "d", "", "database name to import into")
 	importCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to store sources in")
-	importCmd.Flags().String("engine", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
 	importCmd.Flags().Bool("compress", false, "pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine")
 
 	importCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
@@ -73,12 +72,6 @@ func loadImportConfig(cmd *cobra.Command) {
 	c.LineParser = v.GetString("parser")
 	if !parseline.ParserExists(c.LineParser) {
 		showUsage(cmd, "Error: unknown line parser: "+c.LineParser+". Have you made a new parser for your dump in the internal/parseline package?")
-	}
-
-	c.Engine = strings.ToLower(v.GetString("engine"))
-	validEngines := []string{"aria", "myisam"}
-	if !stringinslice.StringInSlice(c.Engine, validEngines) {
-		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", "))
 	}
 
 	c.Conn = v.GetString("conn")
@@ -113,6 +106,12 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	l.FatalOnErr(err)
 	sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
 	l.FatalOnErr(err)
+
+	c.Engine = queryDatabaseEngine()
+	validEngines := []string{"aria", "myisam"}
+	if !stringinslice.StringInSlice(c.Engine, validEngines) {
+		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Use `dumpdb init` to create a new database with a valid database engine.")
+	}
 
 	dataDir := getDataDir()
 	disableDatabaseIndexes(dataDir)

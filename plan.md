@@ -59,7 +59,6 @@ Import files or folders into a database.
 - `conn=`: Connection string for the SQL database. Like `user:pass@tcp(127.0.0.1:3306)`
 - `database=`: Database name to import into
 - `sourcesDatabase=`: Database name to store sources in
-- `engine="Aria"`: The database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL
 - `compress=false`: Pack the database into a compressed, read-only format. Requires the Aria or MyISAM database engine
 - `batchSize=4e6`: Number of results per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB
 - `filePrefix="[database]_"`: Temporary processed file prefix
