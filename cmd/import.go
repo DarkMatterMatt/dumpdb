@@ -13,9 +13,9 @@ import (
 	"strings"
 
 	"github.com/darkmattermatt/dumpdb/internal/config"
+	"github.com/darkmattermatt/dumpdb/internal/linescanner"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 
-	"github.com/darkmattermatt/dumpdb/internal/linescanner"
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
 	"github.com/darkmattermatt/dumpdb/pkg/reverse"
@@ -129,12 +129,16 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	waitForImport(importDone)
 	importToDatabase(outputFile.CurrentFileName(), importDone)
 
+	flushAndLockTables()
+
 	// TODO: customisable tmpDir
 	tmpDir := os.TempDir()
 	if c.Compress {
 		compressDatabase(dataDir, tmpDir)
 	}
 	restoreDatabaseIndexes(dataDir, tmpDir)
+
+	unlockTables()
 }
 
 func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {

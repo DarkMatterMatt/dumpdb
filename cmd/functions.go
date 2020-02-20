@@ -62,7 +62,7 @@ func restoreDatabaseIndexes(dataDir, tmpDir string) {
 		bufferParam = "--myisam_sort_buffer_size"
 	}
 
-	out, err := exec.Command(packCmd, bufferParam, strconv.FormatUint(mem, 10), "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
+	out, err := exec.Command(packCmd, "-rq", bufferParam, strconv.FormatUint(mem, 10), "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(string(out))
 	l.FatalOnErr(err)
 }
@@ -75,7 +75,7 @@ func compressDatabase(dataDir, tmpDir string) {
 		packCmd = "myisampack"
 	}
 
-	out, err := exec.Command(packCmd, "-rq", "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
+	out, err := exec.Command(packCmd, "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(string(out))
 	l.FatalOnErr(err)
 }
@@ -103,4 +103,21 @@ func importToDatabase(filename string, mysqlDone chan bool) {
 func waitForImport(mysqlDone chan bool) {
 	l.D("Waiting for a database load to finish")
 	<-mysqlDone
+}
+
+func flushAndLockTables() {
+	l.V("Flushing and locking the `main` table")
+	_, err := db.Exec(`
+		FLUSH TABLES ` + mainTable + `
+		FOR EXPORT
+	`)
+	l.FatalOnErr(err)
+}
+
+func unlockTables() {
+	l.V("Unlocking the `main` table")
+	_, err := db.Exec(`
+		UNLOCK TABLES
+	`)
+	l.FatalOnErr(err)
 }
