@@ -17,7 +17,7 @@ func ParseLine(name, line, source string) (Record, error) {
 }
 
 // ParserExists checks if the specified line parser exists
-func ParserExists(name) bool {
+func ParserExists(name string) bool {
 	_, ok := lineParsers[name]
 	return ok
 }
