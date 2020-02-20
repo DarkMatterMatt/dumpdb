@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/pbnjay/memory"
@@ -29,6 +30,13 @@ func getDataDir() (dataDir string) {
 	return
 }
 
+func formatCommandOutput(s string) string {
+	s = strings.ReplaceAll(s, "\n\n", "\n")
+	s = strings.ReplaceAll(s, "\n", "\n    ")
+	s = strings.TrimSpace(s)
+	return s
+}
+
 func disableDatabaseIndexes(dataDir string) {
 	l.V("Disabling database indexes")
 
@@ -38,7 +46,7 @@ func disableDatabaseIndexes(dataDir string) {
 	}
 
 	out, err := exec.Command(packCmd, "-rq", "--keys-used", "0", dataDir+c.Database+"/"+mainTable).CombinedOutput()
-	l.D(string(out))
+	l.D(formatCommandOutput(string(out)))
 	l.FatalOnErr(err)
 }
 
@@ -63,7 +71,7 @@ func restoreDatabaseIndexes(dataDir, tmpDir string) {
 	}
 
 	out, err := exec.Command(packCmd, "-rq", bufferParam, strconv.FormatUint(mem, 10), "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
-	l.D(string(out))
+	l.D(formatCommandOutput(string(out)))
 	l.FatalOnErr(err)
 }
 
@@ -76,7 +84,7 @@ func compressDatabase(dataDir, tmpDir string) {
 	}
 
 	out, err := exec.Command(packCmd, "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
-	l.D(string(out))
+	l.D(formatCommandOutput(string(out)))
 	l.FatalOnErr(err)
 }
 
