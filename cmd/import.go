@@ -117,7 +117,7 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	disableDatabaseIndexes(dataDir)
 
 	for _, path := range filesOrFolders {
-		err := linescanner.LineScanner(path, processTextFileScanner)
+		err := linescanner.LineScanner(path, importTextFileScanner)
 		if err == errSignalInterrupt {
 			return
 		}
@@ -148,7 +148,7 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		return nil
 	}
 
-	l.V("Processing: " + path)
+	l.V("Importing: " + path)
 
 	for lineScanner.Scan() {
 		// CTRL+C means stop
@@ -165,15 +165,15 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		// parse & reformat line
 		r, err := parseline.ParseLine(c.LineParser, line, path)
 		if err != nil {
-			if err == parseline.ErrInvalidLineParser {
-				return errors.New(err.Error() + ": " + c.LineParser)
-			}
 			errFile.WriteString(line + "\n")
 			continue
 		}
 
 		if r.EmailRev == "" && r.Email != "" {
 			r.EmailRev = reverse.Reverse(r.Email)
+		}
+		if r.Source == "" {
+			r.Source = path
 		}
 		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
 		l.FatalOnErr(err)
