@@ -130,7 +130,7 @@ func createMainTable(dbName, engine string) error {
 
 			PRIMARY KEY     (id)
 		)
-		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
+		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `' ROW_FORMAT=DYNAMIC MAX_ROWS=4294967295
 	`)
 	return err
 }
@@ -150,7 +150,7 @@ func createSourcesTable(dbName, engine string) error {
 			UNIQUE          (name),
 			PRIMARY KEY     (id)
 		)
-		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
+		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `' ROW_FORMAT=DYNAMIC MAX_ROWS=4294967295
 	`)
 	return err
 }
@@ -169,7 +169,7 @@ func createMetadataTable(dbName, engine string) error {
 
 			PRIMARY KEY		(k)
 		)
-		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `'
+		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `' ROW_FORMAT=DYNAMIC MAX_ROWS=4294967295
 	`)
 	return err
 }
