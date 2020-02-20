@@ -31,6 +31,7 @@ func getDataDir() (dataDir string) {
 }
 
 func formatCommandOutput(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
 	s = strings.ReplaceAll(s, "\n\n", "\n")
 	s = strings.ReplaceAll(s, "\n", "\n    ")
 	s = strings.TrimSpace(s)
@@ -108,6 +109,8 @@ func importToDatabase(filename string, mysqlDone chan bool) {
 	l.FatalOnErr(err)
 
 	l.I("Importing " + filename + " to the database")
+	filename = strings.ReplaceAll(filename, "\\", "\\\\")
+
 	_, err = db.Exec(`
 		LOAD DATA INFILE '` + filename + `'
 		IGNORE INTO TABLE ` + mainTable + `
