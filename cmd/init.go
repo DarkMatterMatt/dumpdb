@@ -128,6 +128,7 @@ func createMainTable(dbName, engine string) error {
 			username        VARCHAR(128),
 			extra        	VARCHAR(1024),		/* extra data that does not fit in an existing column, e.g. password hints */
 
+			INDEX           idx_email_rev       (email_rev),
 			PRIMARY KEY     (id)
 		)
 		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `' ROW_FORMAT=DYNAMIC MAX_ROWS=4294967295
