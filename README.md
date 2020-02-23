@@ -73,6 +73,10 @@ Import files or folders into a database.
 - `batchSize=4e6`: Number of results per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB
 - `filePrefix="[database]_"`: Temporary processed file prefix
 
+**Notes:**
+
+- By default, only the `mysql` user is able to read/write to the database file directly. A workaround is to run `go build .` and then `sudo -u mysql ./dumpdb import ...`
+
 ## Search
 
 Search multiple dump databases simultaneously.
