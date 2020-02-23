@@ -84,7 +84,3 @@ Search multiple dump databases simultaneously.
 - `conn=`: Connection string to connect to MySQL databases. Like `user:pass@tcp(127.0.0.1:3306)`
 - `databases=`: Comma separated list of databases to search
 - `sourcesDatabase=""`: Database name to resolve sourceIDs to their names from
-
-## TODO
-
-- Fix source IDs not being generated
