@@ -62,13 +62,13 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 
 	var err error
 	errFile, err = os.OpenFile(c.FilePrefix+"err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening error log", err)
 	doneFile, err = os.OpenFile(c.FilePrefix+"done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening done log", err)
 	skipFile, err = os.OpenFile(c.FilePrefix+"skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening skip log", err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"output", ".csv", c.BatchSize)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening first output file", err)
 	outputFile.FullFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
 		l.D("Beginning to write to " + s.NextFileName())
 		return nil
@@ -79,7 +79,7 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 		if err == errSignalInterrupt {
 			return
 		}
-		l.FatalOnErr(err)
+		l.FatalOnErr("Processing "+path, err)
 	}
 }
 
@@ -87,7 +87,7 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 	if !strings.HasSuffix(path, ".txt") && !strings.HasSuffix(path, ".csv") {
 		l.V("Skipping: " + path)
 		_, err := skipFile.WriteString(path + "\n")
-		l.FatalOnErr(err)
+		l.FatalOnErr("Writing to skip log", err)
 		return nil
 	}
 
@@ -118,7 +118,7 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 		// write string to output file
 		_, err = outputFile.WriteString(parsedStr + "\n")
 		if err != nil {
-			l.FatalOnErr(err)
+			l.FatalOnErr("Writing processed string to output file", err)
 		}
 	}
 	doneFile.WriteString(path + "\n")

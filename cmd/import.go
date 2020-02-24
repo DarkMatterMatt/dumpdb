@@ -89,13 +89,13 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 
 	var err error
 	errFile, err = os.OpenFile(c.FilePrefix+"err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening error log", err)
 	doneFile, err = os.OpenFile(c.FilePrefix+"done.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening done log", err)
 	skipFile, err = os.OpenFile(c.FilePrefix+"skip.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening skip log", err)
 	outputFile, err = splitfilewriter.Create(c.FilePrefix+"tmp", ".csv", c.BatchSize)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening first output file", err)
 	outputFile.FullFileCallback = func(s *splitfilewriter.SplitFileWriter) error {
 		waitForImport(importDone)
 		go importToDatabase(s.CurrentFileName(), importDone)
@@ -103,9 +103,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	}
 
 	db, err = sql.Open("mysql", c.Conn+c.Database)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening main database connection", err)
 	sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening sources database connection", err)
 
 	c.Engine = queryDatabaseEngine()
 	validEngines := []string{"aria", "myisam"}
@@ -121,7 +121,7 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 		if err == errSignalInterrupt {
 			return
 		}
-		l.FatalOnErr(err)
+		l.FatalOnErr("Importing "+path, err)
 	}
 
 	// final import to mysql
@@ -144,7 +144,7 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 	if !strings.HasSuffix(path, ".txt") && !strings.HasSuffix(path, ".csv") {
 		l.V("Skipping: " + path)
 		_, err := skipFile.WriteString(path + "\n")
-		l.FatalOnErr(err)
+		l.FatalOnErr("Writing to skip log", err)
 		return nil
 	}
 
@@ -176,13 +176,13 @@ func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
 			r.Source = path
 		}
 		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Loading SourceID", err)
 
 		arr := []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password, r.Extra}
 
 		// write string to output file
 		_, err = outputFile.WriteString(strings.Join(arr, "\t") + "\n")
-		l.FatalOnErr(err)
+		l.FatalOnErr("Writing processed string to output file", err)
 	}
 	doneFile.WriteString(path + "\n")
 	return nil

@@ -54,7 +54,7 @@ var (
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
-	l.FatalOnErr(err)
+	l.FatalOnErr("Executing root command", err)
 }
 
 func init() {
@@ -96,7 +96,7 @@ func initConfig() {
 	} else {
 		// find home directory
 		home, err := homedir.Dir()
-		l.FatalOnErr(err)
+		l.FatalOnErr("Fetching home directory", err)
 
 		// search config in home directory with name ".dumpdb" (without extension).
 		v.AddConfigPath(home)

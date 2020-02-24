@@ -25,7 +25,7 @@ func showUsage(cmd *cobra.Command, s string) {
 
 func getDataDir() (dataDir string) {
 	err := db.QueryRow("SELECT @@datadir").Scan(&dataDir)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Querying location of MySQL databases", err)
 	l.D("dataDir: " + dataDir)
 	return
 }
@@ -47,7 +47,7 @@ func queryDatabaseEngine() string {
 		FROM information_schema.tables
 		WHERE table_name='` + mainTable + `' AND table_schema='` + c.Database + `'
 	`).Scan(&engine)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Querying database engine type", err)
 
 	l.V("Found database engine: " + engine)
 	return strings.ToLower(engine)
@@ -63,7 +63,7 @@ func disableDatabaseIndexes(dataDir string) {
 
 	out, err := exec.Command(packCmd, "-rq", "--keys-used", "0", dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(formatCommandOutput(string(out)))
-	l.FatalOnErr(err)
+	l.FatalOnErr("Disabling database indexes", err)
 }
 
 func restoreDatabaseIndexes(dataDir, tmpDir string) {
@@ -88,7 +88,7 @@ func restoreDatabaseIndexes(dataDir, tmpDir string) {
 
 	out, err := exec.Command(packCmd, "-rq", bufferParam, strconv.FormatUint(mem, 10), "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(formatCommandOutput(string(out)))
-	l.FatalOnErr(err)
+	l.FatalOnErr("Indexing database", err)
 }
 
 func compressDatabase(dataDir, tmpDir string) {
@@ -101,12 +101,12 @@ func compressDatabase(dataDir, tmpDir string) {
 
 	out, err := exec.Command(packCmd, "--tmpdir", tmpDir, dataDir+c.Database+"/"+mainTable).CombinedOutput()
 	l.D(formatCommandOutput(string(out)))
-	l.FatalOnErr(err)
+	l.FatalOnErr("Compressing database", err)
 }
 
 func importToDatabase(filename string, mysqlDone chan bool) {
 	filename, err := filepath.Abs(filename)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Determining the absolute filepath of "+filename, err)
 
 	l.I("Importing " + filename + " to the database")
 	filename = strings.ReplaceAll(filename, "\\", "\\\\")
@@ -118,12 +118,12 @@ func importToDatabase(filename string, mysqlDone chan bool) {
 		LINES TERMINATED BY '\n'
 		(sourceid, username, email_rev, hash, password, extra)
 	`)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Loading tmp file into database", err)
 	mysqlDone <- true
 
 	// delete file we just loaded
 	err = os.Remove(filename)
-	l.WarnOnErr(err)
+	l.WarnOnErr("Removing tmp file "+filename, err)
 }
 
 func waitForImport(mysqlDone chan bool) {
@@ -132,18 +132,18 @@ func waitForImport(mysqlDone chan bool) {
 }
 
 func flushAndLockTables() {
-	l.V("Flushing and locking the `main` table")
+	l.V("Flushing and locking the `" + mainTable + "` table")
 	_, err := db.Exec(`
 		FLUSH TABLES ` + mainTable + `
 		FOR EXPORT
 	`)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Flushing and locking the `"+mainTable+"` table", err)
 }
 
 func unlockTables() {
-	l.V("Unlocking the `main` table")
+	l.V("Unlocking the `" + mainTable + "` table")
 	_, err := db.Exec(`
 		UNLOCK TABLES
 	`)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Unlocking the `"+mainTable+"` table", err)
 }

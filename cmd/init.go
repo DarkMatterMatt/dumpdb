@@ -72,14 +72,14 @@ func runInit(cmd *cobra.Command, databases []string) {
 	var err error
 	l.D("Using MySQL connection string: " + c.Conn)
 	db, err = sql.Open("mysql", c.Conn)
-	l.FatalOnErr(err)
+	l.FatalOnErr("Opening connection to MySQL", err)
 
 	if c.SourcesDatabase != "" {
 		err = createDatabase(c.SourcesDatabase)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Creating the sources database", err)
 
 		err = createSourcesTable(c.SourcesDatabase, c.Engine)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Creating the sources table", err)
 	}
 
 	metadata := map[string]string{
@@ -89,16 +89,16 @@ func runInit(cmd *cobra.Command, databases []string) {
 
 	for _, dbName := range c.Databases {
 		err = createDatabase(dbName)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Creating an import database", err)
 
 		err = createMainTable(dbName, c.Engine)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Creating the main table", err)
 
 		err = createMetadataTable(dbName, c.Engine)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Creating the metadata table", err)
 
 		err = addMetadata(dbName, metadata)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Adding default metadata", err)
 	}
 }
 

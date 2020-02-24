@@ -91,7 +91,7 @@ func runSearch(cmd *cobra.Command, databases []string) {
 	if c.SourcesDatabase != "" {
 		var err error
 		sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
-		l.FatalOnErr(err)
+		l.FatalOnErr("Opening sources database", err)
 	}
 
 	l.I("Querying", len(c.Databases), "databases:", strings.Join(c.Databases, ", "))

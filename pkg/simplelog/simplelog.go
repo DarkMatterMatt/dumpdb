@@ -86,15 +86,15 @@ func D(v ...interface{}) {
 }
 
 // FatalOnErr logs and calls os.Exit(1) if the error != nil
-func FatalOnErr(e error) {
+func FatalOnErr(s string, e error) {
 	if e != nil {
-		F(e)
+		F(s, e)
 	}
 }
 
 // WarnOnErr logs the error as a WARNING if the error != nil
-func WarnOnErr(e error) {
+func WarnOnErr(s string, e error) {
 	if e != nil {
-		W(e)
+		W(s, e)
 	}
 }
