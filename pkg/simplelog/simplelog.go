@@ -88,13 +88,13 @@ func D(v ...interface{}) {
 // FatalOnErr logs and calls os.Exit(1) if the error != nil
 func FatalOnErr(s string, e error) {
 	if e != nil {
-		F(s, e)
+		F("{"+s+"}", e)
 	}
 }
 
 // WarnOnErr logs the error as a WARNING if the error != nil
 func WarnOnErr(s string, e error) {
 	if e != nil {
-		W(s, e)
+		W("{"+s+"}", e)
 	}
 }
