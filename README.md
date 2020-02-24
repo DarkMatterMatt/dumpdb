@@ -2,13 +2,11 @@
 
 DumpDB imports credential dumps into a database to improve search performance.
 
-## Dependencies
+## Installation
 
-- [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
-- [github.com/mitchellh/go-homedir](https://github.com/mitchellh/go-homedir)
-- [github.com/spf13/cobra](https://github.com/spf13/cobra)
-- [github.com/spf13/viper](https://github.com/spf13/viper)
-- [github.com/pbnjay/memory](https://github.com/pbnjay/memory)
+This project requires Go version 1.12 or later.
+
+- `go get -u github.com/darkmattermatt/dumpdb`
 
 ## General Info
 
@@ -88,3 +86,13 @@ Search multiple dump databases simultaneously.
 - `conn=`: Connection string to connect to MySQL databases. Like `user:pass@tcp(127.0.0.1:3306)`
 - `databases=`: Comma separated list of databases to search
 - `sourcesDatabase=""`: Database name to resolve sourceIDs to their names from
+
+## External Libraries
+
+This project makes use of several excellent open-source libraries, listed below:
+
+- [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+- [github.com/mitchellh/go-homedir](https://github.com/mitchellh/go-homedir)
+- [github.com/pbnjay/memory](https://github.com/pbnjay/memory)
+- [github.com/spf13/cobra](https://github.com/spf13/cobra)
+- [github.com/spf13/viper](https://github.com/spf13/viper)
