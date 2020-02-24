@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -81,6 +82,32 @@ func loadImportConfig(cmd *cobra.Command) {
 	c.Conn += "/"
 }
 
+func checkDatabaseToolsExist() {
+	if c.Engine == "aria" {
+		_, err := exec.LookPath("aria_chk")
+		l.FatalOnErr("Checking that the required database tools are in PATH", err)
+
+		if c.Compress {
+			_, err = exec.LookPath("aria_pack")
+			l.FatalOnErr("Checking that the required database tools are in PATH", err)
+		}
+	} else if c.Engine == "myisam" {
+		_, err := exec.LookPath("myisamchk")
+		l.FatalOnErr("Checking that the required database tools are in PATH", err)
+
+		if c.Compress {
+			_, err = exec.LookPath("myisampack")
+			l.FatalOnErr("Checking that the required database tools are in PATH", err)
+		}
+	}
+}
+
+func checkDatabaseFilePermissions(dataDir string) {
+	f, err := os.OpenFile(dataDir+c.Database+"/"+mainTable, os.O_RDWR, 0)
+	l.FatalOnErr("Checking read/write permissions", err)
+	f.Close()
+}
+
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	loadImportConfig(cmd)
 
@@ -114,6 +141,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	}
 
 	dataDir := getDataDir()
+	checkDatabaseToolsExist()
+	checkDatabaseFilePermissions(dataDir)
+
 	disableDatabaseIndexes(dataDir)
 
 	for _, path := range filesOrFolders {
