@@ -95,8 +95,7 @@ func runSearch(cmd *cobra.Command, databases []string) {
 	}
 
 	l.I("Querying", len(c.Databases), "databases:", strings.Join(c.Databases, ", "))
-	l.V("Output format is tab-delimited as:")
-	l.V(strings.Join(c.Columns, "\t"))
+	l.V("Output format is tab-delimited as:\n    " + strings.Join(c.Columns, "\t"))
 
 	var wg sync.WaitGroup
 	for _, dbName := range c.Databases {
