@@ -57,15 +57,15 @@ func loadSearchConfig(cmd *cobra.Command, databases []string) {
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Query = v.GetString("query")
 
-	// c.Columns = v.GetStringSlice("columns")
+	requestedCols := v.GetStringSlice("columns")
 	dbCols := []string{"email", "hash", "password", "sourceid", "username", "extra"}
-	if len(c.Columns) == 0 {
+	if len(requestedCols) == 0 {
 		c.Columns = dbCols
 		if c.SourcesDatabase != "" {
 			c.Columns = append(c.Columns, "source")
 		}
 	} else {
-		for _, col := range v.GetStringSlice("columns") {
+		for _, col := range requestedCols {
 			col = strings.ToLower(col)
 			if col == "source" {
 				if c.SourcesDatabase == "" {
