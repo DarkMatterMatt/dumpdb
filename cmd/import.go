@@ -103,9 +103,22 @@ func checkDatabaseToolsExist() {
 }
 
 func checkDatabaseFilePermissions(dataDir string) {
-	f, err := os.OpenFile(dataDir+c.Database+"/"+mainTable, os.O_RDWR, 0)
-	l.FatalOnErr("Checking read/write permissions", err)
-	f.Close()
+	fname := dataDir + c.Database + "/" + mainTable
+	if c.Engine == "aria" {
+		f, err := os.OpenFile(fname+".MAD", os.O_RDWR, 0)
+		l.FatalOnErr("Checking read/write permissions", err)
+		f.Close()
+		f, err = os.OpenFile(fname+".MAI", os.O_RDWR, 0)
+		l.FatalOnErr("Checking read/write permissions", err)
+		f.Close()
+	} else if c.Engine == "myisam" {
+		f, err := os.OpenFile(fname+".MYD", os.O_RDWR, 0)
+		l.FatalOnErr("Checking read/write permissions", err)
+		f.Close()
+		f, err = os.OpenFile(fname+".MYI", os.O_RDWR, 0)
+		l.FatalOnErr("Checking read/write permissions", err)
+		f.Close()
+	}
 }
 
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
@@ -168,6 +181,7 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	restoreDatabaseIndexes(dataDir, tmpDir)
 
 	unlockTables()
+	l.I("Please restart the MySQL server to allow using databases indexes")
 }
 
 func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
