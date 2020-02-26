@@ -10,16 +10,13 @@ import (
 	"errors"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
-	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
-	"github.com/darkmattermatt/dumpdb/pkg/reverse"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
@@ -160,7 +157,9 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	disableDatabaseIndexes(dataDir)
 
 	for _, path := range filesOrFolders {
-		err := linescanner.LineScanner(path, importTextFileScanner)
+		err := linescanner.LineScanner(path, func(a string, b *bufio.Scanner) error {
+			return processTextFileScanner(a, b, true)
+		})
 		if err == errSignalInterrupt {
 			return
 		}
@@ -182,52 +181,4 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 
 	unlockTables()
 	l.I("Please restart the MySQL server to allow using databases indexes")
-}
-
-func importTextFileScanner(path string, lineScanner *bufio.Scanner) error {
-	if !strings.HasSuffix(path, ".txt") && !strings.HasSuffix(path, ".csv") {
-		l.V("Skipping: " + path)
-		_, err := skipFile.WriteString(path + "\n")
-		l.FatalOnErr("Writing to skip log", err)
-		return nil
-	}
-
-	l.V("Importing: " + path)
-
-	for lineScanner.Scan() {
-		// CTRL+C means stop
-		if signalInterrupt {
-			return errSignalInterrupt
-		}
-
-		line := lineScanner.Text()
-		// skip blank lines
-		if line == "" {
-			continue
-		}
-
-		// parse & reformat line
-		r, err := parseline.ParseLine(c.LineParser, line, path)
-		if err != nil {
-			errFile.WriteString(line + "\n")
-			continue
-		}
-
-		if r.EmailRev == "" && r.Email != "" {
-			r.EmailRev = reverse.Reverse(r.Email)
-		}
-		if r.Source == "" {
-			r.Source = path
-		}
-		r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
-		l.FatalOnErr("Loading SourceID", err)
-
-		arr := []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password, r.Extra}
-
-		// write string to output file
-		_, err = outputFile.WriteString(strings.Join(arr, "\t") + "\n")
-		l.FatalOnErr("Writing processed string to output file", err)
-	}
-	doneFile.WriteString(path + "\n")
-	return nil
 }

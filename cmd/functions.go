@@ -5,12 +5,16 @@ package cmd
  */
 
 import (
+	"bufio"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/darkmattermatt/dumpdb/internal/parseline"
+	"github.com/darkmattermatt/dumpdb/internal/sourceid"
+	"github.com/darkmattermatt/dumpdb/pkg/reverse"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/pbnjay/memory"
 	"github.com/spf13/cobra"
@@ -146,4 +150,60 @@ func unlockTables() {
 		UNLOCK TABLES
 	`)
 	l.FatalOnErr("Unlocking the `"+mainTable+"` table", err)
+}
+
+func processTextFileScanner(path string, lineScanner *bufio.Scanner, toImport bool) error {
+	if !strings.HasSuffix(path, ".txt") && !strings.HasSuffix(path, ".csv") {
+		l.V("Skipping: " + path)
+		_, err := skipFile.WriteString(path + "\n")
+		l.FatalOnErr("Writing to skip log", err)
+		return nil
+	}
+
+	l.V("Processing: " + path)
+
+	for lineScanner.Scan() {
+		// CTRL+C means stop
+		if signalInterrupt {
+			return errSignalInterrupt
+		}
+
+		line := lineScanner.Text()
+		// skip blank lines
+		if line == "" {
+			continue
+		}
+
+		// parse & reformat line
+		r, err := parseline.ParseLine(c.LineParser, line, path)
+		if err != nil {
+			errFile.WriteString(line + "\n")
+			continue
+		}
+
+		if r.EmailRev == "" && r.Email != "" {
+			r.EmailRev = reverse.Reverse(r.Email)
+		} else if r.Email == "" && r.EmailRev != "" {
+			r.Email = reverse.Reverse(r.EmailRev)
+		}
+
+		if r.Source == "" {
+			r.Source = path
+		}
+
+		var arr []string
+		if toImport {
+			r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
+			l.FatalOnErr("Loading SourceID", err)
+			arr = []string{strconv.FormatInt(r.SourceID, 10), r.Username, r.EmailRev, r.Hash, r.Password, r.Extra}
+		} else {
+			arr = []string{r.Source, r.Username, r.Email, r.Hash, r.Password, r.Extra}
+		}
+
+		// write string to output file
+		_, err = outputFile.WriteString(strings.Join(arr, "\t") + "\n")
+		l.FatalOnErr("Writing processed string to output file", err)
+	}
+	doneFile.WriteString(path + "\n")
+	return nil
 }

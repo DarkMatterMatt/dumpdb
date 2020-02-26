@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"errors"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
@@ -75,52 +74,12 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 	}
 
 	for _, path := range filesOrFolders {
-		err := linescanner.LineScanner(path, processTextFileScanner)
+		err := linescanner.LineScanner(path, func(a string, b *bufio.Scanner) error {
+			return processTextFileScanner(a, b, false)
+		})
 		if err == errSignalInterrupt {
 			return
 		}
 		l.FatalOnErr("Processing "+path, err)
 	}
-}
-
-func processTextFileScanner(path string, lineScanner *bufio.Scanner) error {
-	if !strings.HasSuffix(path, ".txt") && !strings.HasSuffix(path, ".csv") {
-		l.V("Skipping: " + path)
-		_, err := skipFile.WriteString(path + "\n")
-		l.FatalOnErr("Writing to skip log", err)
-		return nil
-	}
-
-	l.V("Processing: " + path)
-
-	for lineScanner.Scan() {
-		// CTRL+C means stop
-		if signalInterrupt {
-			return errSignalInterrupt
-		}
-
-		line := lineScanner.Text()
-		// skip blank lines
-		if line == "" {
-			continue
-		}
-
-		// parse & reformat line
-		r, err := parseline.ParseLine(c.LineParser, line, path)
-		if err != nil {
-			errFile.WriteString(line + "\n")
-			continue
-		}
-
-		parsedArray := []string{r.Source, r.Username, r.Email, r.Hash, r.Password, r.Extra}
-		parsedStr := strings.Join(parsedArray, "\t")
-
-		// write string to output file
-		_, err = outputFile.WriteString(parsedStr + "\n")
-		if err != nil {
-			l.FatalOnErr("Writing processed string to output file", err)
-		}
-	}
-	doneFile.WriteString(path + "\n")
-	return nil
 }
