@@ -17,8 +17,9 @@ type Config struct {
 	Engine          string
 
 	// search
-	Query   string
-	Columns []string
+	Query        string
+	OutputFormat string
+	Columns      []string
 
 	// import
 	FilesOrFolders string

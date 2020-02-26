@@ -47,6 +47,7 @@ func init() {
 	searchCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to resolve sourceIDs to their names from")
 
 	searchCmd.Flags().StringP("query", "Q", "", "the WHERE clause of a SQL query. Yes it's injected, so try not to break your own database")
+	searchCmd.Flags().StringP("format", "f", "text", "the output format")
 	searchCmd.Flags().StringSliceP("columns", "C", []string{}, "comma separated list of columns to retrieve")
 
 	searchCmd.MarkFlagRequired("conn")
@@ -57,6 +58,11 @@ func loadSearchConfig(cmd *cobra.Command, databases []string) {
 	c.Databases = append(v.GetStringSlice("databases"), databases...)
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
 	c.Query = v.GetString("query")
+
+	c.OutputFormat = strings.ToLower(v.GetString("format"))
+	if _, ok := searchPerRecordCallbacks[c.OutputFormat]; !ok {
+		showUsage(cmd, "Invalid output format: "+c.OutputFormat+". Options are: text, json")
+	}
 
 	requestedCols := v.GetStringSlice("columns")
 	dbCols := []string{"email", "hash", "password", "sourceid", "username", "extra"}
@@ -73,7 +79,7 @@ func loadSearchConfig(cmd *cobra.Command, databases []string) {
 					showUsage(cmd, "Parameter sourcesDatabase must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
 				}
 			} else if !stringinslice.StringInSlice(col, dbCols) {
-				showUsage(cmd, "Invalid column name: "+col)
+				showUsage(cmd, "Invalid column name: "+col+". Options are: "+strings.Join(append(dbCols, "source"), ", "))
 			}
 			c.Columns = append(c.Columns, col)
 		}
@@ -101,7 +107,7 @@ func runSearch(cmd *cobra.Command, databases []string) {
 	var wg sync.WaitGroup
 	for _, dbName := range c.Databases {
 		wg.Add(1)
-		go queryDatabase(dbName, &wg, searchPerRecordCallback)
+		go queryDatabase(dbName, &wg, searchPerRecordCallbacks[c.OutputFormat])
 	}
 	wg.Wait()
 }
@@ -118,31 +124,35 @@ func preferUsingEmailRev(stmt string) string {
 	return regexp.MustCompile("(?i)email\\s*(LIKE|[<>!=]{1,2})\\s*('[^']*'|\"[^\"]*\")").ReplaceAllString(stmt, "email_rev $1 REVERSE($2)")
 }
 
-func searchPerRecordCallback(r *parseline.Record) error {
-	var arr []string
-	for _, col := range c.Columns {
-		switch col {
-		case "email":
-			arr = append(arr, r.Email)
-		case "hash":
-			arr = append(arr, r.Hash)
-		case "password":
-			arr = append(arr, r.Password)
-		case "source":
-			s, err := sourceid.SourceName(r.SourceID, sourcesDb, sourcesTable)
-			if err != nil {
-				return err
+var searchPerRecordCallbacks = make(map[string]func(r *parseline.Record) error)
+
+func init() {
+	searchPerRecordCallbacks["text"] = func(r *parseline.Record) error {
+		var arr []string
+		for _, col := range c.Columns {
+			switch col {
+			case "email":
+				arr = append(arr, r.Email)
+			case "hash":
+				arr = append(arr, r.Hash)
+			case "password":
+				arr = append(arr, r.Password)
+			case "source":
+				s, err := sourceid.SourceName(r.SourceID, sourcesDb, sourcesTable)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, s)
+			case "sourceid":
+				arr = append(arr, strconv.FormatInt(r.SourceID, 10))
+			case "username":
+				arr = append(arr, r.Username)
+			case "extra":
+				arr = append(arr, r.Extra)
 			}
-			arr = append(arr, s)
-		case "sourceid":
-			arr = append(arr, strconv.FormatInt(r.SourceID, 10))
-		case "username":
-			arr = append(arr, r.Username)
-		case "extra":
-			arr = append(arr, r.Extra)
 		}
+		// print result to stdout
+		l.R(strings.Join(arr, "\t"))
+		return nil
 	}
-	// print result to stdout
-	l.R(strings.Join(arr, "\t"))
-	return nil
 }
