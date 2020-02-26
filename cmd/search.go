@@ -58,7 +58,7 @@ func init() {
 func loadSearchConfig(cmd *cobra.Command, databases []string) {
 	c.Databases = append(v.GetStringSlice("databases"), databases...)
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Query = v.GetString("query")
+	c.Query = preferUsingEmailRev(v.GetString("query"))
 
 	c.OutputFormat = strings.ToLower(v.GetString("format"))
 	if _, ok := searchPerRecordCallbacks[c.OutputFormat]; !ok {
