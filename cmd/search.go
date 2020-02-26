@@ -32,7 +32,7 @@ var searchCmd = &cobra.Command{
 	Args: func(cmd *cobra.Command, args []string) error {
 		databases, _ := cmd.Flags().GetStringSlice("databases")
 		if len(args) < 1 && len(databases) == 0 {
-			return errors.New("Missing database names to process")
+			return errors.New("Missing database names to search")
 		}
 		return nil
 	},
@@ -41,7 +41,7 @@ var searchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	// Positional args: databases: the names of databases to initialise. Also support using -d flag
+	// Positional args: databases: the names of databases to search. Also support using -d flag
 	searchCmd.Flags().StringP("conn", "c", "", "connection string to connect to MySQL databases. Like user:pass@tcp(127.0.0.1:3306)")
 	searchCmd.Flags().StringSliceP("databases", "d", []string{}, "comma separated list of databases to search")
 	searchCmd.Flags().StringP("sourcesDatabase", "s", "", "database name to resolve sourceIDs to their names from")
