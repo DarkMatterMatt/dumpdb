@@ -189,10 +189,6 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner, toImport bo
 			r.Email = reverse.Reverse(r.EmailRev)
 		}
 
-		if r.Source == "" {
-			r.Source = path
-		}
-
 		var arr []string
 		if toImport {
 			r.SourceID, err = sourceid.SourceID(r.Source, sourcesDb, sourcesTable)
