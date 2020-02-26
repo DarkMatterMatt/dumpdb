@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"regexp"
 	"strconv"
@@ -153,6 +154,59 @@ func init() {
 		}
 		// print result to stdout
 		l.R(strings.Join(arr, "\t"))
+		return nil
+	}
+
+	searchPerRecordCallbacks["jsonl"] = func(r *parseline.Record) error {
+		var arr []string
+		for _, col := range c.Columns {
+			switch col {
+			case "email":
+				tmp, err := json.Marshal(r.Email)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, "\"email\":"+string(tmp))
+			case "hash":
+				tmp, err := json.Marshal(r.Hash)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, "\"hash\":"+string(tmp))
+			case "password":
+				tmp, err := json.Marshal(r.Password)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, "\"password\":"+string(tmp))
+			case "source":
+				s, err := sourceid.SourceName(r.SourceID, sourcesDb, sourcesTable)
+				if err != nil {
+					return err
+				}
+				tmp, err := json.Marshal(s)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, "\"source\":"+string(tmp))
+			case "sourceid":
+				arr = append(arr, "\"sourceid\":"+strconv.FormatInt(r.SourceID, 10))
+			case "username":
+				tmp, err := json.Marshal(r.Username)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, "\"username\":"+string(tmp))
+			case "extra":
+				tmp, err := json.Marshal(r.Extra)
+				if err != nil {
+					return err
+				}
+				arr = append(arr, "\"extra\":"+string(tmp))
+			}
+		}
+		// print result to stdout
+		l.R("{" + strings.Join(arr, ",") + "}")
 		return nil
 	}
 }
