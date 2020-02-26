@@ -2,9 +2,11 @@
 
 DumpDB imports credential dumps into a database to improve search performance.
 
+There are two types of databases that will be created; one type stores the breach sources and the other type stores the dumped records. There should be a single sources-type database which stores where each record comes from (e.g. it could come from adobe2013 or collection1). There will be one or more databases which store the dumped records, these will be indexed and searched seperately.
+
 ## Installation
 
-This project requires Go version 1.12 or later.
+This project requires Go version 1.12 or later. You will also need access to a MariaDB (recommended) or MySQL server.
 
 - `go get -u github.com/darkmattermatt/dumpdb`
 
