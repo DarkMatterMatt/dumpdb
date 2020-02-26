@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/darkmattermatt/dumpdb/internal/config"
+	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
@@ -139,17 +140,9 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 	}
 	defer rows.Close()
 
-	var (
-		email    string
-		hash     string
-		password string
-		sourceID int64
-		username string
-		extra    string
-	)
-
 	for rows.Next() {
-		err := rows.Scan(&email, &hash, &password, &sourceID, &username, &extra)
+		r := parseline.Record{}
+		err := rows.Scan(&r.Email, &r.Hash, &r.Password, &r.SourceID, &r.Username, &r.Extra)
 		if err != nil {
 			l.W(err)
 			return
@@ -159,24 +152,24 @@ func queryDatabase(dbName string, wg *sync.WaitGroup) {
 		for _, col := range c.Columns {
 			switch col {
 			case "email":
-				arr = append(arr, email)
+				arr = append(arr, r.Email)
 			case "hash":
-				arr = append(arr, hash)
+				arr = append(arr, r.Hash)
 			case "password":
-				arr = append(arr, password)
+				arr = append(arr, r.Password)
 			case "source":
-				s, err := sourceid.SourceName(sourceID, sourcesDb, sourcesTable)
+				s, err := sourceid.SourceName(r.SourceID, sourcesDb, sourcesTable)
 				if err != nil {
 					l.W(err)
 					return
 				}
 				arr = append(arr, s)
 			case "sourceid":
-				arr = append(arr, strconv.FormatInt(sourceID, 10))
+				arr = append(arr, strconv.FormatInt(r.SourceID, 10))
 			case "username":
-				arr = append(arr, username)
+				arr = append(arr, r.Username)
 			case "extra":
-				arr = append(arr, extra)
+				arr = append(arr, r.Extra)
 			}
 		}
 		// print result to stdout
