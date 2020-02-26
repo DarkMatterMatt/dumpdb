@@ -101,7 +101,7 @@ func runSearch(cmd *cobra.Command, databases []string) {
 	var wg sync.WaitGroup
 	for _, dbName := range c.Databases {
 		wg.Add(1)
-		go queryDatabase(dbName, &wg)
+		go queryDatabase(dbName, &wg, searchPerRecordCallback)
 	}
 	wg.Wait()
 }
@@ -118,67 +118,31 @@ func preferUsingEmailRev(stmt string) string {
 	return regexp.MustCompile("(?i)email\\s*(LIKE|[<>!=]{1,2})\\s*('[^']*'|\"[^\"]*\")").ReplaceAllString(stmt, "email_rev $1 REVERSE($2)")
 }
 
-func queryDatabase(dbName string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	dbConn := c.Conn + dbName
-	l.D("queryDatabase", "dbConn:", dbConn)
-	db, err := sql.Open("mysql", dbConn)
-	if err != nil {
-		l.W(err)
-		return
-	}
-	defer db.Close()
-
-	q := "SELECT email, hash, password, sourceid, username, extra FROM main WHERE " + c.Query
-	l.D("queryDatabase", dbName, q)
-
-	rows, err := db.Query(q)
-	if err != nil {
-		l.W(err)
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		r := parseline.Record{}
-		err := rows.Scan(&r.Email, &r.Hash, &r.Password, &r.SourceID, &r.Username, &r.Extra)
-		if err != nil {
-			l.W(err)
-			return
-		}
-
-		var arr []string
-		for _, col := range c.Columns {
-			switch col {
-			case "email":
-				arr = append(arr, r.Email)
-			case "hash":
-				arr = append(arr, r.Hash)
-			case "password":
-				arr = append(arr, r.Password)
-			case "source":
-				s, err := sourceid.SourceName(r.SourceID, sourcesDb, sourcesTable)
-				if err != nil {
-					l.W(err)
-					return
-				}
-				arr = append(arr, s)
-			case "sourceid":
-				arr = append(arr, strconv.FormatInt(r.SourceID, 10))
-			case "username":
-				arr = append(arr, r.Username)
-			case "extra":
-				arr = append(arr, r.Extra)
+func searchPerRecordCallback(r *parseline.Record) error {
+	var arr []string
+	for _, col := range c.Columns {
+		switch col {
+		case "email":
+			arr = append(arr, r.Email)
+		case "hash":
+			arr = append(arr, r.Hash)
+		case "password":
+			arr = append(arr, r.Password)
+		case "source":
+			s, err := sourceid.SourceName(r.SourceID, sourcesDb, sourcesTable)
+			if err != nil {
+				return err
 			}
+			arr = append(arr, s)
+		case "sourceid":
+			arr = append(arr, strconv.FormatInt(r.SourceID, 10))
+		case "username":
+			arr = append(arr, r.Username)
+		case "extra":
+			arr = append(arr, r.Extra)
 		}
-		// print result to stdout
-		l.R(strings.Join(arr, "\t"))
 	}
-
-	err = rows.Err()
-	if err != nil {
-		l.W(err)
-		return
-	}
+	// print result to stdout
+	l.R(strings.Join(arr, "\t"))
+	return nil
 }

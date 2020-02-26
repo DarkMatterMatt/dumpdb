@@ -6,11 +6,13 @@ package cmd
 
 import (
 	"bufio"
+	"database/sql"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
@@ -206,4 +208,38 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner, toImport bo
 	}
 	doneFile.WriteString(path + "\n")
 	return nil
+}
+
+func queryDatabase(dbName string, wg *sync.WaitGroup, perRecordCallback func(*parseline.Record) error) error {
+	defer wg.Done()
+
+	dbConn := c.Conn + dbName
+	l.D("queryDatabase", "dbConn:", dbConn)
+	db, err := sql.Open("mysql", dbConn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	q := "SELECT email, hash, password, sourceid, username, extra FROM main WHERE " + c.Query
+	l.D("queryDatabase", dbName, q)
+
+	rows, err := db.Query(q)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		r := parseline.Record{}
+		err := rows.Scan(&r.Email, &r.Hash, &r.Password, &r.SourceID, &r.Username, &r.Extra)
+		if err != nil {
+			return err
+		}
+		err = perRecordCallback(&r)
+		if err != nil {
+			return err
+		}
+	}
+	return rows.Err()
 }
