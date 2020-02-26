@@ -10,6 +10,27 @@ This project requires Go version 1.12 or later. You will also need access to a M
 
 - `go get -u github.com/darkmattermatt/dumpdb`
 
+## Example Usage
+
+[Initialise](#init) the databases
+
+```bash
+go run github.com/darkmattermatt/dumpdb init -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d adobe2013,collection1
+```
+
+[Import](#import) the dumped data
+
+```bash
+go run github.com/darkmattermatt/dumpdb import -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d adobe2013 /path/to/data.tar.gz /more/data.txt
+go run github.com/darkmattermatt/dumpdb import -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d collection1 /path/to/data.tar.gz /more/data.txt
+```
+
+[Search](#search) the indexed data
+
+```bash
+go run github.com/darkmattermatt/dumpdb search -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d adobe2013,collection1 -Q "email LIKE '%@example.com' LIMIT 10"
+```
+
 ## General Info
 
 **Verbosity:**
@@ -88,6 +109,10 @@ Search multiple dump databases simultaneously.
 - `conn=`: Connection string to connect to MySQL databases. Like `user:pass@tcp(127.0.0.1:3306)`
 - `databases=`: Comma separated list of databases to search
 - `sourcesDatabase=""`: Database name to resolve sourceIDs to their names from
+
+**Notes:**
+
+- The query is injected into the SQL command which means that any `LIMIT` statements are applied per database
 
 ## External Libraries
 
