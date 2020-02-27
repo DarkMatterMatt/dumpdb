@@ -23,7 +23,7 @@ func init() {
 
 		result.Hash = r[3]
 		result.Extra = strings.TrimRight(r[4], "-|")
-		result.Source = source
+		result.Source = "adobe"
 		return result, nil
 	}
 }
