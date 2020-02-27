@@ -21,8 +21,8 @@ go run github.com/darkmattermatt/dumpdb init -c "user:pass@tcp(127.0.0.1:3306)" 
 [Import](#import) the dumped data
 
 ```bash
-go run github.com/darkmattermatt/dumpdb import -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d adobe2013 /path/to/data.tar.gz /more/data.txt
-go run github.com/darkmattermatt/dumpdb import -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d collection1 /path/to/data.tar.gz /more/data.txt
+go run github.com/darkmattermatt/dumpdb import -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d adobe2013 -p adobe /path/to/data.tar.gz /more/data.txt
+go run github.com/darkmattermatt/dumpdb import -c "user:pass@tcp(127.0.0.1:3306)" -s sources -d collection1 -p collections /path/to/data.tar.gz /more/data.txt
 ```
 
 [Search](#search) the indexed data
