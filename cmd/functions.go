@@ -1,9 +1,5 @@
 package cmd
 
-/**
- * Author: Matt Moran
- */
-
 import (
 	"bufio"
 	"database/sql"
