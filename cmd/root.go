@@ -26,7 +26,7 @@ const (
 
 var errSignalInterrupt = errors.New("Signal Interrupt")
 
-var v = viper.NewWithOptions(viper.EnvKeyReplacer(camelcase2underscore.NewCamelcase2UnderscoreReplacer()))
+var v = viper.NewWithOptions(viper.EnvKeyReplacer(camelcase2underscore.NewReplacer()))
 
 // the base command when called without any subcommands
 var rootCmd = &cobra.Command{

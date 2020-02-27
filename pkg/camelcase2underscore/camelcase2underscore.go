@@ -65,15 +65,15 @@ func Camelcase2Underscore(s string) string {
 	return string(b.r)
 }
 
-// Camelcase2UnderscoreReplacer is similar to a string.replacer
-type Camelcase2UnderscoreReplacer struct{}
+// Replacer is similar to a string.replacer
+type Replacer struct{}
 
 // Replace returns a copy of s with all replacements performed.
-func (*Camelcase2UnderscoreReplacer) Replace(s string) string {
+func (*Replacer) Replace(s string) string {
 	return Camelcase2Underscore(s)
 }
 
-// NewCamelcase2UnderscoreReplacer creates a string replacer.
-func NewCamelcase2UnderscoreReplacer() *Camelcase2UnderscoreReplacer {
-	return &Camelcase2UnderscoreReplacer{}
+// NewReplacer creates a string replacer.
+func NewReplacer() *Replacer {
+	return &Replacer{}
 }
