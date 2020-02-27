@@ -202,23 +202,25 @@ func processTextFileScanner(path string, lineScanner *bufio.Scanner, toImport bo
 	return nil
 }
 
-func queryDatabase(dbName string, wg *sync.WaitGroup, perRecordCallback func(*parseline.Record) error) error {
+func queryDatabase(dbName string, wg *sync.WaitGroup, perRecordCallback func(*parseline.Record) error) {
 	defer wg.Done()
 
 	dbConn := c.Conn + dbName
 	l.D("queryDatabase", "dbConn:", dbConn)
 	db, err := sql.Open("mysql", dbConn)
 	if err != nil {
-		return err
+		l.W(dbName+": Opening database", err)
+		return
 	}
 	defer db.Close()
 
 	q := "SELECT email, hash, password, sourceid, username, extra FROM main WHERE " + c.Query
-	l.D("queryDatabase", dbName, q)
+	l.D("queryDatabase", dbName, "Query: ", q)
 
 	rows, err := db.Query(q)
 	if err != nil {
-		return err
+		l.W(dbName+": Running query", err)
+		return
 	}
 	defer rows.Close()
 
@@ -226,12 +228,20 @@ func queryDatabase(dbName string, wg *sync.WaitGroup, perRecordCallback func(*pa
 		r := parseline.Record{}
 		err := rows.Scan(&r.Email, &r.Hash, &r.Password, &r.SourceID, &r.Username, &r.Extra)
 		if err != nil {
-			return err
+			l.W(dbName+": Reading row from database"+dbName, err)
+			return
 		}
+
 		err = perRecordCallback(&r)
 		if err != nil {
-			return err
+			l.W(dbName+": Running perRecordCallback", err)
+			return
 		}
 	}
-	return rows.Err()
+
+	err = rows.Err()
+	if err != nil {
+		l.W(dbName+": Error iterating over rows", err)
+		return
+	}
 }
