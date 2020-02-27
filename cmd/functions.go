@@ -56,7 +56,7 @@ func queryDatabaseEngine() string {
 }
 
 func disableDatabaseIndexes(dataDir string) {
-	l.V("Disabling database indexes")
+	l.I("Disabling database indexes")
 
 	packCmd := "aria_chk"
 	if c.Engine == "myisam" {
@@ -69,7 +69,7 @@ func disableDatabaseIndexes(dataDir string) {
 }
 
 func restoreDatabaseIndexes(dataDir, tmpDir string) {
-	l.V("Indexing database")
+	l.I("Indexing database")
 
 	mem := memory.TotalMemory()
 	if mem != 0 {
@@ -94,7 +94,7 @@ func restoreDatabaseIndexes(dataDir, tmpDir string) {
 }
 
 func compressDatabase(dataDir, tmpDir string) {
-	l.V("Compressing database")
+	l.I("Compressing database")
 
 	packCmd := "aria_pack"
 	if c.Engine == "myisam" {
