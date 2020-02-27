@@ -97,6 +97,7 @@ Import files or folders into a database.
 **Notes:**
 
 - By default, only the `mysql` user is able to read/write to the database file directly. A workaround is to run `go build .` and then `sudo -u mysql ./dumpdb import ...`
+- Only files with whitelisted file extensions are processed (to avoid trying to import a binary file as a text file). Currently supported extensions are `.tar.gz`, `.tgz`, `.txt`, `.csv`.
 
 ## Search
 
