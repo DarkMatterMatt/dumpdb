@@ -3,6 +3,7 @@ package cmd
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -41,6 +42,7 @@ func init() {
 	initCmd.Flags().StringP("conn", "c", "", "connection string for the MySQL. Like user:pass@tcp(127.0.0.1:3306)")
 	initCmd.Flags().StringP("sourcesDatabase", "s", "", "initialise the sources database")
 	initCmd.Flags().String("engine", "aria", "the database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL")
+	initCmd.Flags().StringSlice("indexes", []string{"email_rev"}, "comma separated list of columns to index in the main database. Email_rev is strongly recommended to enable searching by @email.com")
 
 	initCmd.MarkFlagRequired("conn")
 }
@@ -48,6 +50,7 @@ func init() {
 func loadInitConfig(cmd *cobra.Command, databases []string) {
 	c.Databases = append(v.GetStringSlice("databases"), databases...)
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
+	c.Indexes = v.GetStringSlice("indexes")
 
 	c.Engine = strings.ToLower(v.GetString("engine"))
 	validEngines := []string{"aria", "myisam"}
@@ -87,7 +90,7 @@ func runInit(cmd *cobra.Command, databases []string) {
 		err = createDatabase(dbName)
 		l.FatalOnErr("Creating an import database", err)
 
-		err = createMainTable(dbName, c.Engine)
+		err = createMainTable(dbName, c.Engine, c.Indexes)
 		l.FatalOnErr("Creating the main table", err)
 
 		err = createMetadataTable(dbName, c.Engine)
@@ -98,6 +101,14 @@ func runInit(cmd *cobra.Command, databases []string) {
 	}
 }
 
+func createIndexesStatement(indexes []string) string {
+	stmts := make([]string, len(indexes))
+	for i, index := range indexes {
+		stmts[i] = fmt.Sprintf(`INDEX idx_%s (%s),`, index, index)
+	}
+	return strings.Join(stmts, " ")
+}
+
 func createDatabase(dbName string) error {
 	l.I("createDatabase: " + dbName)
 	_, err := db.Exec(`
@@ -106,7 +117,7 @@ func createDatabase(dbName string) error {
 	return err
 }
 
-func createMainTable(dbName, engine string) error {
+func createMainTable(dbName, engine string, indexes []string) error {
 	l.I("createMainTable: " + dbName + "/" + mainTable)
 	_, err := db.Exec(`USE ` + dbName)
 	if err != nil {
@@ -122,9 +133,9 @@ func createMainTable(dbName, engine string) error {
 			email           VARCHAR(320)        GENERATED ALWAYS AS (REVERSE(email_rev)) VIRTUAL,
 			email_rev       VARCHAR(320),       /* max length 320 https://stackoverflow.com/a/574698/6595777 */
 			username        VARCHAR(128),
-			extra        	VARCHAR(1024),		/* extra data that does not fit in an existing column, e.g. password hints */
+			extra        	VARCHAR(1024),      /* extra data that does not fit in an existing column, e.g. password hints */
 
-			INDEX           idx_email_rev       (email_rev),
+			` + createIndexesStatement(indexes) + `
 			PRIMARY KEY     (id)
 		)
 		CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' ENGINE '` + engine + `' ROW_FORMAT=DYNAMIC MAX_ROWS=4294967295
