@@ -63,6 +63,7 @@ Initialise a database for importing.
 - `conn=`: connection string for the MySQL. Like `user:pass@tcp(127.0.0.1:3306)`
 - `sourcesDatabase=""`: Initialise the following database as the one to store sources in
 - `engine="Aria"`: The database engine. Aria is recommended (requires MariaDB), MyISAM is supported for MySQL
+- `indexes="email_rev"`: Comma separated list of columns to index in the main database. Email_rev is strongly recommended to enable searching by @email.com
 
 ## Process
 

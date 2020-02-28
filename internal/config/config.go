@@ -15,6 +15,7 @@ type Config struct {
 	Conn            string
 	SourcesDatabase string
 	Engine          string
+	Indexes         []string
 
 	// search
 	Query        string
