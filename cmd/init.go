@@ -50,7 +50,16 @@ func init() {
 func loadInitConfig(cmd *cobra.Command, databases []string) {
 	c.Databases = append(v.GetStringSlice("databases"), databases...)
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Indexes = v.GetStringSlice("indexes")
+
+	requestedIndexes := v.GetStringSlice("indexes")
+	possibleIndexes := []string{"email", "email_rev", "hash", "password", "sourceid", "username", "extra"}
+	for _, idx := range requestedIndexes {
+		idx = strings.ToLower(idx)
+		if !stringinslice.StringInSlice(idx, possibleIndexes) {
+			showUsage(cmd, "Invalid column name: "+idx+". Options are: "+strings.Join(possibleIndexes, ", "))
+		}
+		c.Indexes = append(c.Indexes, idx)
+	}
 
 	c.Engine = strings.ToLower(v.GetString("engine"))
 	validEngines := []string{"aria", "myisam"}
