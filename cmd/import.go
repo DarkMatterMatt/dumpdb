@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
 
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
@@ -68,11 +67,7 @@ func loadImportConfig(cmd *cobra.Command) {
 		showUsage(cmd, "Error: unknown line parser: "+c.LineParser+". Have you made a new parser for your dump in the internal/parseline package?")
 	}
 
-	c.Conn = v.GetString("conn")
-	if !config.ValidDSNConn(c.Conn) {
-		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
-	}
-	c.Conn += "/"
+	c.SetConn(v.GetString("conn"))
 }
 
 func checkDatabaseToolsExist() {

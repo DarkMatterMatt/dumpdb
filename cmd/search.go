@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
@@ -82,11 +81,7 @@ func loadSearchConfig(cmd *cobra.Command, databases []string) {
 		}
 	}
 
-	c.Conn = v.GetString("conn")
-	if !config.ValidDSNConn(c.Conn) {
-		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
-	}
-	c.Conn += "/"
+	c.SetConn(v.GetString("conn"))
 }
 
 func runSearch(cmd *cobra.Command, databases []string) {
