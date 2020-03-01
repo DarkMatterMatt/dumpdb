@@ -253,6 +253,11 @@ func (c *Config) SetFilePrefix(prefix string) error {
 	}
 	f.Close()
 
+	err = os.Remove(prefix + "__dumpdb__test_write")
+	if err != nil {
+		return err
+	}
+
 	c.FilePrefix = prefix
 	return nil
 }
