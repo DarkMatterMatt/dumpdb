@@ -7,13 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/darkmattermatt/dumpdb/internal/config"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
-const schemaVersion = "0.0.3"
+const schemaVersion = "0.0.4"
 
 // the `init` command
 var initCmd = &cobra.Command{
@@ -67,11 +66,7 @@ func loadInitConfig(cmd *cobra.Command, databases []string) {
 		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
 	}
 
-	c.Conn = v.GetString("conn")
-	if !config.ValidDSNConn(c.Conn) {
-		showUsage(cmd, "Invalid MySQL connection string "+c.Conn+". It must look like user:pass@tcp(127.0.0.1:3306)")
-	}
-	c.Conn += "/"
+	c.SetConn(v.GetString("conn"))
 }
 
 func runInit(cmd *cobra.Command, databases []string) {
@@ -82,17 +77,10 @@ func runInit(cmd *cobra.Command, databases []string) {
 	db, err = sql.Open("mysql", c.Conn)
 	l.FatalOnErr("Opening connection to MySQL", err)
 
-	if c.SourcesDatabase != "" {
-		err = createDatabase(c.SourcesDatabase)
-		l.FatalOnErr("Creating the sources database", err)
-
-		err = createSourcesTable(c.SourcesDatabase, c.Engine)
-		l.FatalOnErr("Creating the sources table", err)
-	}
-
 	metadata := map[string]string{
 		"schema_version": schemaVersion,
 		"created":        time.Now().Format("2006-01-02 15:04"),
+		"type":           "main",
 	}
 
 	for _, dbName := range c.Databases {
@@ -106,6 +94,22 @@ func runInit(cmd *cobra.Command, databases []string) {
 		l.FatalOnErr("Creating the metadata table", err)
 
 		err = addMetadata(dbName, metadata)
+		l.FatalOnErr("Adding default metadata", err)
+	}
+
+	if c.SourcesDatabase != "" {
+		metadata["type"] = "sources"
+
+		err = createDatabase(c.SourcesDatabase)
+		l.FatalOnErr("Creating the sources database", err)
+
+		err = createSourcesTable(c.SourcesDatabase, c.Engine)
+		l.FatalOnErr("Creating the sources table", err)
+
+		err = createMetadataTable(c.SourcesDatabase, c.Engine)
+		l.FatalOnErr("Creating the metadata table", err)
+
+		err = addMetadata(c.SourcesDatabase, metadata)
 		l.FatalOnErr("Adding default metadata", err)
 	}
 }
