@@ -33,7 +33,7 @@ type Config struct {
 	Columns      []string
 
 	// import
-	FilesOrFolders string
+	FilesOrFolders []string
 	LineParser     string
 	Database       string
 	Compress       bool
@@ -197,7 +197,12 @@ func (c *Config) SetFilesOrFolders(paths []string) error {
 	if len(paths) < 1 {
 		return errors.New("Missing files or folders to import")
 	}
-	return pathexists.AssertPathsAllExist(paths)
+	err := pathexists.AssertPathsAllExist(paths)
+	if err != nil {
+		return err
+	}
+	c.FilesOrFolders = paths
+	return nil
 }
 
 // SetLineParser sets the function to parse lines when importing
@@ -205,6 +210,7 @@ func (c *Config) SetLineParser(p string) error {
 	if !parseline.ParserExists(p) {
 		return errors.New("Error: unknown line parser: " + p + ". Have you made a new parser for your dump in the internal/parseline package?")
 	}
+	c.LineParser = p
 	return nil
 }
 
@@ -247,6 +253,11 @@ func (c *Config) SetBatchSize(size int) error {
 
 // SetFilePrefix sets the number of records that are imported to the database together
 func (c *Config) SetFilePrefix(prefix string) error {
+	if c.Database == "" {
+		return errors.New("Programming error: SetDatabase must be called before SetFilePrefix")
+	}
+	prefix = strings.ReplaceAll(prefix, "[database]", c.Database)
+
 	f, err := os.OpenFile(prefix+"__dumpdb__test_write", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		return err
