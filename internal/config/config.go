@@ -253,9 +253,6 @@ func (c *Config) SetBatchSize(size int) error {
 
 // SetFilePrefix sets the number of records that are imported to the database together
 func (c *Config) SetFilePrefix(prefix string) error {
-	if c.Database == "" {
-		return errors.New("Programming error: SetDatabase must be called before SetFilePrefix")
-	}
 	prefix = strings.ReplaceAll(prefix, "[database]", c.Database)
 
 	f, err := os.OpenFile(prefix+"__dumpdb__test_write", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
