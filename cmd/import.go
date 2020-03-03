@@ -3,18 +3,13 @@ package cmd
 import (
 	"bufio"
 	"database/sql"
-	"errors"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
 
-	"github.com/darkmattermatt/dumpdb/internal/parseline"
-	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
-	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
@@ -26,12 +21,6 @@ var importCmd = &cobra.Command{
 	Run:   runImport,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		v.BindPFlags(cmd.Flags())
-	},
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Missing files to import")
-		}
-		return pathexists.AssertPathsAreFiles(args)
 	},
 }
 
@@ -54,20 +43,17 @@ func init() {
 	importCmd.MarkFlagRequired("sourcesDatabase")
 }
 
-func loadImportConfig(cmd *cobra.Command) {
-	c.Database = v.GetString("database")
-	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Compress = v.GetBool("compress")
+func loadImportConfig(cmd *cobra.Command, filesOrFolders []string) {
+	l.FatalOnErr("Setting connection", c.SetConn(v.GetString("conn")))
+	l.FatalOnErr("Setting database", c.SetDatabase(v.GetString("database")))
+	l.FatalOnErr("Setting sources database", c.SetSourcesDatabase(v.GetString("sourcesDatabase")))
 
-	c.BatchSize = v.GetInt("batchSize")
-	c.FilePrefix = strings.ReplaceAll(v.GetString("filePrefix"), "[database]", c.Database)
+	l.FatalOnErr("Setting compress", c.SetCompress(v.GetBool("compress")))
+	l.FatalOnErr("Setting batch size", c.SetBatchSize(v.GetInt("batchSize")))
+	l.FatalOnErr("Setting compress", c.SetFilePrefix(v.GetString("filePrefix")))
 
-	c.LineParser = v.GetString("parser")
-	if !parseline.ParserExists(c.LineParser) {
-		showUsage(cmd, "Error: unknown line parser: "+c.LineParser+". Have you made a new parser for your dump in the internal/parseline package?")
-	}
-
-	c.SetConn(v.GetString("conn"))
+	l.FatalOnErr("Setting line parser", c.SetLineParser(v.GetString("parser")))
+	l.FatalOnErr("Setting files or folders", c.SetFilesOrFolders(filesOrFolders))
 }
 
 func checkDatabaseToolsExist() {
@@ -110,7 +96,7 @@ func checkDatabaseFilePermissions(dataDir string) {
 }
 
 func runImport(cmd *cobra.Command, filesOrFolders []string) {
-	loadImportConfig(cmd)
+	loadImportConfig(cmd, filesOrFolders)
 
 	importDone := make(chan bool, 1)
 	importDone <- true
@@ -135,11 +121,7 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 	sourcesDb, err = sql.Open("mysql", c.Conn+c.SourcesDatabase)
 	l.FatalOnErr("Opening sources database connection", err)
 
-	c.Engine = queryDatabaseEngine()
-	validEngines := []string{"aria", "myisam"}
-	if !stringinslice.StringInSlice(c.Engine, validEngines) {
-		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Use `dumpdb init` to create a new database with a valid database engine.")
-	}
+	l.FatalOnErr("Setting engine", c.SetEngine(queryDatabaseEngine()))
 
 	dataDir := getDataDir()
 	checkDatabaseToolsExist()
@@ -147,7 +129,7 @@ func runImport(cmd *cobra.Command, filesOrFolders []string) {
 
 	disableDatabaseIndexes(dataDir)
 
-	for _, path := range filesOrFolders {
+	for _, path := range c.FilesOrFolders {
 		err := linescanner.LineScanner(path, func(a string, b *bufio.Scanner) error {
 			return processTextFileScanner(a, b, true)
 		})
