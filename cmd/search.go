@@ -3,7 +3,6 @@ package cmd
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	"github.com/darkmattermatt/dumpdb/internal/parseline"
 	"github.com/darkmattermatt/dumpdb/internal/sourceid"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
-	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
@@ -24,13 +22,6 @@ var searchCmd = &cobra.Command{
 	Run:   runSearch,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		v.BindPFlags(cmd.Flags())
-	},
-	Args: func(cmd *cobra.Command, args []string) error {
-		databases, _ := cmd.Flags().GetStringSlice("databases")
-		if len(args) < 1 && len(databases) == 0 {
-			return errors.New("Missing database names to search")
-		}
-		return nil
 	},
 }
 
@@ -51,37 +42,12 @@ func init() {
 }
 
 func loadSearchConfig(cmd *cobra.Command, databases []string) {
-	c.Databases = append(v.GetStringSlice("databases"), databases...)
-	c.SourcesDatabase = v.GetString("sourcesDatabase")
-	c.Query = preferUsingEmailRev(v.GetString("query"))
-
-	c.OutputFormat = strings.ToLower(v.GetString("format"))
-	if _, ok := searchPerRecordCallbacks[c.OutputFormat]; !ok {
-		showUsage(cmd, "Invalid output format: "+c.OutputFormat+". Options are: text, json")
-	}
-
-	requestedCols := v.GetStringSlice("columns")
-	dbCols := []string{"email", "hash", "password", "sourceid", "username", "extra"}
-	if len(requestedCols) == 0 {
-		c.Columns = dbCols
-		if c.SourcesDatabase != "" {
-			c.Columns = append(c.Columns, "source")
-		}
-	} else {
-		for _, col := range requestedCols {
-			col = strings.ToLower(col)
-			if col == "source" {
-				if c.SourcesDatabase == "" {
-					showUsage(cmd, "Parameter sourcesDatabase must be set when requesting the `source` column. Use `sourceId` to get the unique source ID number.")
-				}
-			} else if !stringinslice.StringInSlice(col, dbCols) {
-				showUsage(cmd, "Invalid column name: "+col+". Options are: "+strings.Join(append(dbCols, "source"), ", "))
-			}
-			c.Columns = append(c.Columns, col)
-		}
-	}
-
-	c.SetConn(v.GetString("conn"))
+	l.FatalOnErr("Setting connection", c.SetConn(v.GetString("conn")))
+	l.FatalOnErr("Setting databases", c.SetDatabases(append(v.GetStringSlice("databases"), databases...)))
+	l.FatalOnErr("Setting sources database", c.SetSourcesDatabase(v.GetString("sourcesDatabase")))
+	l.FatalOnErr("Setting SQL query string", c.SetQuery(preferUsingEmailRev(v.GetString("query"))))
+	l.FatalOnErr("Setting output format", c.SetOutputFormat(v.GetString("format")))
+	l.FatalOnErr("Setting output columns", c.SetColumns(v.GetStringSlice("columns")))
 }
 
 func runSearch(cmd *cobra.Command, databases []string) {
