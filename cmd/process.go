@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"bufio"
-	"errors"
 	"os"
 	"time"
 
 	"github.com/darkmattermatt/dumpdb/internal/linescanner"
-	"github.com/darkmattermatt/dumpdb/internal/parseline"
-	"github.com/darkmattermatt/dumpdb/pkg/pathexists"
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 	"github.com/spf13/cobra"
@@ -23,12 +20,6 @@ var processCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		v.BindPFlags(cmd.Flags())
 	},
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Missing files to process")
-		}
-		return pathexists.AssertPathsAreFiles(args)
-	},
 }
 
 func init() {
@@ -39,21 +30,18 @@ func init() {
 	processCmd.Flags().Int("batchSize", 4e6, "number of lines per temporary file (used for the LOAD FILE INTO command). 1e6 = ~64MB, 16e6 = ~1GB")
 	processCmd.Flags().String("filePrefix", time.Now().Format("2006-01-02_1504_05 "), "processed file prefix")
 
-	importCmd.MarkFlagRequired("parser")
+	processCmd.MarkFlagRequired("parser")
 }
 
-func loadProcessConfig(cmd *cobra.Command) {
-	c.BatchSize = v.GetInt("batchSize")
-	c.FilePrefix = v.GetString("filePrefix")
-
-	c.LineParser = v.GetString("parser")
-	if !parseline.ParserExists(c.LineParser) {
-		showUsage(cmd, "Error: unknown line parser: "+c.LineParser+". Have you made a new parser for your dump in the internal/parseline package?")
-	}
+func loadProcessConfig(cmd *cobra.Command, filesOrFolders []string) {
+	l.FatalOnErr("Setting batch size", c.SetBatchSize(v.GetInt("batchSize")))
+	l.FatalOnErr("Setting file prefix", c.SetFilePrefix(v.GetString("filePrefix")))
+	l.FatalOnErr("Setting line parser", c.SetLineParser(v.GetString("parser")))
+	l.FatalOnErr("Setting files or folders", c.SetFilesOrFolders(filesOrFolders))
 }
 
 func runProcess(cmd *cobra.Command, filesOrFolders []string) {
-	loadProcessConfig(cmd)
+	loadProcessConfig(cmd, filesOrFolders)
 
 	var err error
 	errFile, err = os.OpenFile(c.FilePrefix+"err.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0664)
@@ -69,7 +57,7 @@ func runProcess(cmd *cobra.Command, filesOrFolders []string) {
 		return nil
 	}
 
-	for _, path := range filesOrFolders {
+	for _, path := range c.FilesOrFolders {
 		err := linescanner.LineScanner(path, func(a string, b *bufio.Scanner) error {
 			return processTextFileScanner(a, b, false)
 		})
