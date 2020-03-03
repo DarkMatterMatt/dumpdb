@@ -8,7 +8,6 @@ import (
 	"time"
 
 	l "github.com/darkmattermatt/dumpdb/pkg/simplelog"
-	"github.com/darkmattermatt/dumpdb/pkg/stringinslice"
 	"github.com/spf13/cobra"
 )
 
@@ -47,26 +46,11 @@ func init() {
 }
 
 func loadInitConfig(cmd *cobra.Command, databases []string) {
+	l.FatalOnErr("Setting connection", c.SetConn(v.GetString("conn")))
+	l.FatalOnErr("Setting indexes", c.SetIndexes(v.GetStringSlice("indexes")))
+	l.FatalOnErr("Setting engine", c.SetEngine(v.GetString("engine")))
 	c.Databases = append(v.GetStringSlice("databases"), databases...)
 	c.SourcesDatabase = v.GetString("sourcesDatabase")
-
-	requestedIndexes := v.GetStringSlice("indexes")
-	possibleIndexes := []string{"email", "email_rev", "hash", "password", "sourceid", "username", "extra"}
-	for _, idx := range requestedIndexes {
-		idx = strings.ToLower(idx)
-		if !stringinslice.StringInSlice(idx, possibleIndexes) {
-			showUsage(cmd, "Invalid column name: "+idx+". Options are: "+strings.Join(possibleIndexes, ", "))
-		}
-		c.Indexes = append(c.Indexes, idx)
-	}
-
-	c.Engine = strings.ToLower(v.GetString("engine"))
-	validEngines := []string{"aria", "myisam"}
-	if !stringinslice.StringInSlice(c.Engine, validEngines) {
-		showUsage(cmd, "Error: unknown database engine: "+c.Engine+". Valid options are: "+strings.Join(validEngines, ", ")+"\n")
-	}
-
-	c.SetConn(v.GetString("conn"))
 }
 
 func runInit(cmd *cobra.Command, databases []string) {
