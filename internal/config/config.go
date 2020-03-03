@@ -97,6 +97,10 @@ func (c *Config) SetConn(s string) error {
 
 // SetSourcesDatabase sets the sources database name, SetConn must be called first
 func (c *Config) SetSourcesDatabase(s string) error {
+	if s == "" {
+		return nil
+	}
+
 	if c.Conn == "" {
 		return errors.New("Programming error: SetConn must be called before SetDatabases")
 	}
