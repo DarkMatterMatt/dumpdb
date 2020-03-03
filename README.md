@@ -41,9 +41,9 @@ go run github.com/darkmattermatt/dumpdb search -c "user:pass@tcp(127.0.0.1:3306)
 
 Output levels are as follows:
 
-1. `RESULTS`: Only show errors and search results
-2. `FATAL`: Only show errors and search results
-3. `WARNINGS`: Nonfatal errors (usually occurring in one of the query threads)
+1. `FATAL`: Only show errors and search results
+2. `RESULT`: Only show errors and search results
+3. `WARNING`: Nonfatal errors (usually occurring in one of the query threads)
 4. `INFO`: The default level, provides minimal information at each step of the process
 5. `VERBOSE`: Tells you what's going on
 6. `DEBUG`: Spews out data
