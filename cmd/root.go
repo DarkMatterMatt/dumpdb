@@ -103,7 +103,7 @@ func initConfig() {
 	err := v.ReadInConfig()
 	if err == nil {
 		l.V("Using config file:", v.ConfigFileUsed())
-	} else if _, ok := err.(*viper.ConfigFileNotFoundError); !ok {
+	} else if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 		l.WarnOnErr("Parsing config file", err)
 	} else {
 		l.D("No config file found")
