@@ -8,6 +8,7 @@ import (
 
 	"github.com/darkmattermatt/dumpdb/internal/config"
 	"github.com/darkmattermatt/dumpdb/pkg/camelcase2underscore"
+	"github.com/darkmattermatt/dumpdb/pkg/simplelog"
 	"github.com/darkmattermatt/dumpdb/pkg/splitfilewriter"
 	_ "github.com/go-sql-driver/mysql" // import driver for `sql`
 
@@ -61,6 +62,7 @@ func init() {
 	rootCmd.PersistentFlags().CountP("quiet", "q", "quiet. This is subtracted from the verbosity")
 
 	// initialize logger
+	c.Verbosity = simplelog.DEBUG
 	l.GetVerbosityWith(func() int {
 		return c.Verbosity
 	})
