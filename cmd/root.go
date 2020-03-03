@@ -79,8 +79,7 @@ func init() {
 func initConfig() {
 	// store settings in config map
 	v.BindPFlags(rootCmd.Flags())
-	c.ConfigFile = v.GetString("config")
-	c.Verbosity = l.INFO + v.GetInt("verbose") - v.GetInt("quiet")
+	l.FatalOnErr("Setting verbosity", c.SetVerbosity(l.INFO+v.GetInt("verbose")-v.GetInt("quiet")))
 
 	// read in environment variables that match
 	v.SetEnvPrefix("ddb")

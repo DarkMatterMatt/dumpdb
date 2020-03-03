@@ -17,8 +17,7 @@ import (
 // Config contains the configuration options for DumpDB
 type Config struct {
 	// root
-	Verbosity  int
-	ConfigFile string
+	Verbosity int
 
 	// init
 	Databases       []string
