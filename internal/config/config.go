@@ -124,7 +124,7 @@ func (c *Config) SetSourcesDatabase(s string) error {
 // SetEngine sets the database storage engine
 func (c *Config) SetEngine(e string) error {
 	supportedEngines := []string{"aria", "myisam"}
-	if !stringinslice.StringInSlice(e, supportedEngines) {
+	if !stringinslice.StringInSlice(strings.ToLower(e), supportedEngines) {
 		return errors.New("Error: unknown database engine: " + e + ". Supported engines are: " + strings.Join(supportedEngines, ", "))
 	}
 	c.Engine = e
