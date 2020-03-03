@@ -173,7 +173,11 @@ func (c *Config) SetOutputFormat(o string) error {
 // SetColumns sets the columns to output when searching
 func (c *Config) SetColumns(cols []string) error {
 	if len(cols) < 1 {
-		return errors.New("Ummmm... you didn't specify any output columns?")
+		c.Columns = []string{"email", "hash", "password", "sourceid", "username", "extra"}
+		if c.SourcesDatabase != "" {
+			c.Columns = append(c.Columns, "source")
+		}
+		return nil
 	}
 
 	supportedCols := []string{"email", "email_rev", "hash", "password", "sourceid", "username", "extra", "source"}
