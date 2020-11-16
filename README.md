@@ -1,6 +1,6 @@
 # DumpDB
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3d9eeec095af431f8c8c311538636723)](https://app.codacy.com/manual/mattmoran2000/dumpdb?utm_source=github.com&utm_medium=referral&utm_content=DarkMatterMatt/dumpdb&utm_campaign=Badge_Grade_Dashboard)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ae50e6c43d0646ddbf3826048f49d05a)](https://www.codacy.com/gh/DarkMatterMatt/dumpdb/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DarkMatterMatt/dumpdb&amp;utm_campaign=Badge_Grade)
 
 DumpDB imports credential dumps into a database to improve search performance.
 
@@ -8,7 +8,7 @@ There are two types of databases that will be created; one type stores the breac
 
 ## Installation
 
-This project requires Go version 1.12 or later. You will also need access to a MariaDB (recommended) or MySQL server.
+This project requires Go version 1.15 or later. You will also need access to a MariaDB (recommended) or MySQL server.
 
 ```bash
 go get -u github.com/darkmattermatt/dumpdb
