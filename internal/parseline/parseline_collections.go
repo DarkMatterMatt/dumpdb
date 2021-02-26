@@ -27,13 +27,20 @@ func init() {
 			return result, errors.New("Incorrect number of columns")
 		}
 
-		// check for presence of an @ symbol in the email address
-		if !strings.Contains(r[0], "@") {
-			return result, errors.New("Email address is missing")
+		result.Password = r[1]
+
+		// roughly check if it is an email address or a username
+		idxAt := strings.Index(r[0], "@")
+		idxDot := strings.LastIndex(r[0], ".")
+
+		if idxAt > 0 && idxDot > idxAt+1 {
+			// is email
+			result.Email = r[0]
+		} else {
+			// not email
+			result.Username = r[0]
 		}
 
-		result.Email = r[0]
-		result.Password = r[1]
 		return result, nil
 	}
 }
